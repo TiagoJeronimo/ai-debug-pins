@@ -10,7 +10,7 @@ Made for [Claude Code](https://claude.com/claude-code): new notes go along with 
 
 Paste this into Claude Code, in your project:
 
-> Set up ai-debug-pins here: run `claude plugin marketplace add OWNER/ai-debug-pins` and `claude plugin install ai-debug-pins@ai-debug-pins`,
+> Set up ai-debug-pins here: run `claude plugin marketplace add TiagoJeronimo/ai-debug-pins` and `claude plugin install ai-debug-pins@ai-debug-pins`,
 > then `npm i -D ai-debug-pins`, and add `debugPins()` (`import debugPins from 'ai-debug-pins'`) to the plugins in my Vite config.
 
 Then restart the dev server and Claude Code.
@@ -40,7 +40,7 @@ export default { plugins: [debugPins()] }
 Only on `vite serve`: nothing reaches a build. For Claude Code:
 
 ```bash
-claude plugin marketplace add OWNER/ai-debug-pins
+claude plugin marketplace add TiagoJeronimo/ai-debug-pins
 ```
 
 ```bash

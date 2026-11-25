@@ -4,7 +4,18 @@
   "description": "Click a spot on your dev page and type a note: Claude Code gets a picture with a ring where you clicked, your words and the code they point at.",
   "type": "module",
   "license": "MIT",
-  "keywords": ["vite-plugin", "claude-code", "screenshot", "notes", "ai"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TiagoJeronimo/ai-debug-pins.git"
+  },
+  "homepage": "https://github.com/TiagoJeronimo/ai-debug-pins#readme",
+  "keywords": [
+    "vite-plugin",
+    "claude-code",
+    "screenshot",
+    "notes",
+    "ai"
+  ],
   "exports": {
     ".": "./vite.js"
   },
