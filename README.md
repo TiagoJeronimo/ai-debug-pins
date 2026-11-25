@@ -3,28 +3,57 @@
 Click a spot on your dev page, type a line, press Enter. Claude gets a picture of the page with a ring where you
 clicked, your words, and where they point in the code. No more screenshot, paste, explain.
 
-Made for [Claude Code](https://claude.com/claude-code): new notes go along with your next message by themselves. The notes are plain files, so other AI tools can read them too
-(see the end). Works with [Vite](https://vite.dev) dev servers, and on WebGL games as well as plain pages.
+![Click ✎, click a spot on the page, type a note: Claude gets the picture with a ring and your words](https://raw.githubusercontent.com/TiagoJeronimo/ai-debug-pins/main/docs/demo.gif)
+
+Made for [Claude Code](https://claude.com/claude-code): new notes go along with your next message by themselves. Works
+with any framework (React, Vue, Svelte, Next.js, plain HTML), on WebGL games as well as plain pages. The notes are plain
+files, so other AI tools can read them too (see the end).
 
 ## Set it up with Claude
 
 Paste this into Claude Code, in your project:
 
-> Set up ai-debug-pins here: run `claude plugin marketplace add TiagoJeronimo/ai-debug-pins` and `claude plugin install ai-debug-pins@ai-debug-pins`,
-> then `npm i -D ai-debug-pins`, and add `debugPins()` (`import debugPins from 'ai-debug-pins'`) to the plugins in my Vite config.
+> Set up ai-debug-pins here (https://github.com/TiagoJeronimo/ai-debug-pins): install its Claude Code plugin, then
+> add it to my dev server as its README says, for development only.
 
 Then restart the dev server and Claude Code.
 
 ## Use
 
-On any page of the dev server: click ✎ at the bottom right, click a spot, type, Enter (Esc cancels). Back in Claude
-Code, send anything ("go"): the chat shows "📍 1 note sent with this message", and Claude says what it got, looks at
-the picture, finds the code and does what the note asks. Or say "read my notes" for every note not yet done.
+On any page in development: click ✎ at the bottom right, click a spot, type, Enter (Esc cancels). Back in Claude Code,
+send anything ("go"): the chat shows "📍 1 note sent with this message", and Claude says what it got, looks at the
+picture, finds the code and does what the note asks. Or say "read my notes" for every note not yet done.
 
-Notes live in `.notes/notes.md` with their pictures beside them; `.notes/` ignores itself in git. Each note has the
-page, viewport, point, a short CSS path, the element's text and, on React pages, the nearest components and the file.
+Notes live in `.notes/notes.md`, pictures beside them; `.notes/` ignores itself in git. A note looks like this:
+
+```md
+## 2026-11-25T14-36-16-914Z · new
+
+> The keep looks too grey. Warmer stone?
+
+![picture](2026-11-25T14-36-16-914Z.png)
+- page: http://localhost:5173/games/castle/
+- viewport: 1240x895 @2x
+- point: 420, 150 (the ring, in CSS pixels)
+- element: `#root > main.castle > div:nth-of-type(1) > div > canvas`
+- component: Canvas ← Picture ← CastlePage (src/games/Picture.tsx)
+```
+
+On React pages it finds the nearest components and the file they are in.
 
 ## Set it up by hand
+
+**1. The Claude Code plugin:**
+
+```bash
+claude plugin marketplace add TiagoJeronimo/ai-debug-pins
+```
+
+```bash
+claude plugin install ai-debug-pins@ai-debug-pins
+```
+
+**2a. A Vite project** (Vite, React with Vite, Vue, SvelteKit, Nuxt, Astro, React Router...):
 
 ```bash
 npm i -D ai-debug-pins
@@ -37,15 +66,28 @@ import debugPins from 'ai-debug-pins'
 export default { plugins: [debugPins()] }
 ```
 
-Only on `vite serve`: nothing reaches a build. For Claude Code:
+Only on `vite serve`: nothing reaches a build.
+
+**2b. Anything else** (Next.js, Angular, webpack, Rails, Django, plain HTML...): run the notes server in your project
+folder, beside your dev server,
 
 ```bash
-claude plugin marketplace add TiagoJeronimo/ai-debug-pins
+npx ai-debug-pins
 ```
 
-```bash
-claude plugin install ai-debug-pins@ai-debug-pins
+and add one line to your page, in development only:
+
+```html
+<script type="module" src="http://localhost:7777/client.js"></script>
 ```
+
+In Next.js, for example, in `app/layout.tsx`:
+
+```jsx
+{process.env.NODE_ENV === 'development' && <script type="module" src="http://localhost:7777/client.js" />}
+```
+
+It takes notes only from pages on your own machine. Another port: `npx ai-debug-pins 7778`.
 
 To stop notes going along with your messages, set `AI_DEBUG_PINS_HOOK=0`; "read my notes" still works.
 
@@ -56,9 +98,6 @@ No permission and no extension: the page draws its own picture
 too. Being redrawn, not a screenshot, it can differ in small ways (a stray character from an unusual CSS `content`, a
 lighter shadow). Each note says so, and Claude is told to act on your words and the element they point at, never on how
 the picture looks.
-
-Not on Vite? Without the plugin there is nowhere to save: the note goes to the clipboard and the picture to your
-downloads.
 
 ## Other AI tools
 

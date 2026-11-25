@@ -1,7 +1,8 @@
 // The note button. Plain DOM, no framework, so it works on any page. Its UI lives in a shadow root, left out of the
 // picture.
+// Notes go back to whichever server this file came from: the Vite plugin, or the standalone server on another port.
 const POST = (path, body) =>
-  fetch('/@ai-debug-pins/' + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+  fetch(new URL(path, import.meta.url), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
 
 const host = document.createElement('ai-debug-pins-ui')
 const ui = host.attachShadow({ mode: 'open' })

@@ -1,6 +1,6 @@
 {
   "name": "ai-debug-pins",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Click a spot on your dev page and type a note: Claude Code gets a picture with a ring where you clicked, your words and the code they point at.",
   "type": "module",
   "license": "MIT",
@@ -19,11 +19,17 @@
   "exports": {
     ".": "./vite.js"
   },
+  "bin": {
+    "ai-debug-pins": "bin.js"
+  },
   "files": [
     "vite.js",
+    "server.js",
+    "bin.js",
     "client.js",
     "notes.js",
-    "vite.d.ts"
+    "vite.d.ts",
+    "LICENSE"
   ],
   "types": "./vite.d.ts",
   "scripts": {
