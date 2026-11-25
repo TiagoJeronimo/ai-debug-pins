@@ -56,7 +56,7 @@ claude plugin install ai-debug-pins@ai-debug-pins
 **2a. A Vite project** (Vite, React with Vite, Vue, SvelteKit, Nuxt, Astro, React Router...):
 
 ```bash
-npm i -D ai-debug-pins
+npm i -D github:TiagoJeronimo/ai-debug-pins
 ```
 
 ```js
@@ -72,7 +72,7 @@ Only on `vite serve`: nothing reaches a build.
 folder, beside your dev server,
 
 ```bash
-npx ai-debug-pins
+npx github:TiagoJeronimo/ai-debug-pins
 ```
 
 and add one line to your page, in development only:
@@ -87,7 +87,7 @@ In Next.js, for example, in `app/layout.tsx`:
 {process.env.NODE_ENV === 'development' && <script type="module" src="http://localhost:7777/client.js" />}
 ```
 
-It takes notes only from pages on your own machine. Another port: `npx ai-debug-pins 7778`.
+It takes notes only from pages on your own machine. Another port: `npx github:TiagoJeronimo/ai-debug-pins 7778`.
 
 To stop notes going along with your messages, set `AI_DEBUG_PINS_HOOK=0`; "read my notes" still works.
 
