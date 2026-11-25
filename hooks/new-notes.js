@@ -16,8 +16,11 @@ if (process.env.PINNOTES_HOOK !== '0') {
       hookSpecificOutput: {
         hookEventName: 'UserPromptSubmit',
         additionalContext:
-          `New notes pinned on the page (from ${dir}/notes.md; open each picture in that folder). ` +
-          'Use the read-my-notes skill to act on them.\n\n' + fresh.join('\n\n'),
+          `The user pinned ${fresh.length} new note${fresh.length > 1 ? 's' : ''} on their page (from ${dir}/notes.md; ` +
+          'open each picture in that folder). Begin your reply with one line saying you got them, e.g. ' +
+          `"Got ${fresh.length} note${fresh.length > 1 ? 's' : ''}: …" with each note's words. Then, with the read-my-notes ` +
+          "skill, review each note and do what it asks (fix or change the code), and mark it done; a note that only " +
+          'asks a question gets an answer.\n\n' + fresh.join('\n\n'),
       },
     }))
   }

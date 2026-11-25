@@ -1,6 +1,6 @@
 {
   "name": "pinnotes",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Click a spot on your dev page, type a note: a real screenshot with a dot, for Claude Code to read.",
   "type": "module",
   "license": "MIT",
