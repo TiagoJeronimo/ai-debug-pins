@@ -19,6 +19,7 @@ test('a note is written with its picture, then taken once', async () => {
   assert.equal(await readFile(join(dir, '.gitignore'), 'utf8'), '*\n')
   const md = await readFile(join(dir, 'notes.md'), 'utf8')
   assert.match(md, /^## 2026-11-25T10-00-00-000Z · new\n\n> Too big\n> and pink\n\n!\[picture\]\(2026-11-25T10-00-00-000Z\.png\)/m)
+  assert.match(md, /redrawn by the page/)
   assert.match(md, /- text: "Hello world"/)
   assert.match(md, /- component: Title ← Home \(src\/Home\.tsx\)/)
   assert.match(md, /_No picture: denied\._/)

@@ -13,11 +13,13 @@ export async function saveNote(dir, note, png) {
   const quote = String(note.note ?? '').trim().split('\n').map((l) => '> ' + l).join('\n')
   const c = note.component
   const fields = [
-    png ? `![picture](${id}.png)` : `_No picture: ${line(note.noPicture) || 'none taken'}._`,
+    png
+      ? `![picture](${id}.png)\n_The picture is redrawn by the page from its DOM: small differences from the screen are not bugs._`
+      : `_No picture: ${line(note.noPicture) || 'none taken'}._`,
     '',
     `- page: ${line(note.url)}`,
     `- viewport: ${line(note.viewport)} @${line(note.dpr)}x`,
-    `- point: ${line(note.point)} (the dot, in CSS pixels)`,
+    `- point: ${line(note.point)} (the ring, in CSS pixels)`,
     `- element: \`${line(note.path)}\``,
     note.text && `- text: "${line(note.text)}"`,
     c?.names?.length && `- component: ${c.names.map(line).join(' ← ')}${c.file ? ` (${line(c.file)})` : ''}`,

@@ -1,5 +1,5 @@
-// The note button. Plain DOM, no framework, so it works on any page. Its UI lives in a shadow root and is hidden
-// while the picture is taken, so it never appears in it.
+// The note button. Plain DOM, no framework, so it works on any page. Its UI lives in a shadow root, left out of the
+// picture.
 const POST = (path, body) =>
   fetch('/@pinnotes/' + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
 
@@ -29,7 +29,7 @@ document.documentElement.append(host)
 
 const $ = (s) => ui.querySelector(s)
 const fab = $('.fab'), layer = $('.layer'), dot = $('.dot'), box = $('.box'), input = $('input'), toast = $('.toast')
-let pick = null // the click: point, the element under it, and where the viewport sits on the screen
+let pick = null // the click: the point and the element under it
 
 const reset = () => {
   pick = null
@@ -56,8 +56,7 @@ layer.onclick = (e) => {
   host.style.display = 'none'
   const el = document.elementFromPoint(e.clientX, e.clientY)
   host.style.display = ''
-  // The viewport's corner on the screen, from the click itself: right whatever the toolbar or a docked DevTools.
-  pick = { x: e.clientX, y: e.clientY, el, sx: e.screenX - e.clientX, sy: e.screenY - e.clientY }
+  pick = { x: e.clientX, y: e.clientY, el }
   layer.hidden = true
   Object.assign(dot.style, { left: e.clientX + 'px', top: e.clientY + 'px' })
   Object.assign(box.style, {
@@ -82,31 +81,44 @@ box.onsubmit = async (e) => {
     component: react(p.el),
   }
   reset()
-  // Out of the picture: hide, let the browser show two frames without us, then take it.
-  host.style.display = 'none'
-  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 30))))
-  let res
   try {
-    res = await POST('shot', { x: p.sx, y: p.sy, w: innerWidth, h: innerHeight })
-  } finally {
-    host.style.display = ''
+    note.png = await withDot(await picture(), p.x, p.y)
+  } catch (err) {
+    note.noPicture = String(err?.message ?? err)
   }
-  if (res.status === 404) return copy(note)
-  if (res.ok) note.png = await withDot(await res.blob(), p.x, p.y)
-  else note.noPicture = (await res.json()).error
-  const saved = await POST('note', note)
+  const saved = await POST('note', note).catch(() => null)
+  if (!saved || saved.status === 404) return copy(note)
   if (!saved.ok) return say('Not saved: ' + (await saved.json().catch(() => ({}))).error)
-  say(note.png ? 'Saved in .notes/notes.md' : 'Saved without a picture. ' + note.noPicture)
+  say(note.png ? 'Saved in .notes/notes.md' : 'Saved without a picture: ' + note.noPicture)
 }
 
-async function withDot(blob, x, y) {
-  const img = await createImageBitmap(blob)
-  const k = img.width / innerWidth // the picture is in device pixels
+// The page draws its own picture: no permission, no extension. Taken inside a frame, right after the page has drawn,
+// when a WebGL canvas still holds its picture (no preserveDrawingBuffer needed). The note's UI is left out.
+async function picture() {
+  const { domToCanvas } = await import('./modern-screenshot.js')
+  const page = await new Promise((ok, no) =>
+    requestAnimationFrame(() =>
+      domToCanvas(document.documentElement, {
+        scale: devicePixelRatio,
+        // At least the screen: a page whose content is all fixed (a game) measures zero high.
+        width: Math.max(document.documentElement.scrollWidth, innerWidth),
+        height: Math.max(document.documentElement.scrollHeight, innerHeight),
+        filter: (n) => n !== host,
+      }).then(ok, no),
+    ),
+  )
+  // The whole page is drawn; keep the part that was on screen.
+  const k = devicePixelRatio
   const c = document.createElement('canvas')
-  c.width = img.width
-  c.height = img.height
+  c.width = innerWidth * k
+  c.height = innerHeight * k
+  c.getContext('2d').drawImage(page, -scrollX * k, -scrollY * k)
+  return c
+}
+
+async function withDot(c, x, y) {
+  const k = devicePixelRatio
   const g = c.getContext('2d')
-  g.drawImage(img, 0, 0)
   // A ring, not a filled dot, so what was clicked stays readable inside it.
   for (const [width, colour] of [[8, '#0009'], [6, '#fff'], [3.5, '#e5484d']]) {
     g.beginPath()
@@ -118,15 +130,17 @@ async function withDot(blob, x, y) {
   return c.toDataURL('image/png').split(',')[1]
 }
 
-// Without the plugin (the client put on a page by hand) there is nowhere to save: the note goes to the clipboard.
+// Without the plugin (the client put on a page by hand) there is nowhere to save: the words go to the clipboard
+// and the picture to the downloads.
 async function copy(note) {
-  const { png: _, component: c, ...rest } = note
+  const { png, component: c, ...rest } = note
+  if (png) Object.assign(document.createElement('a'), { href: 'data:image/png;base64,' + png, download: 'note.png' }).click()
   const text = Object.entries({ ...rest, component: c && c.names.join(' ← ') + (c.file ? ` (${c.file})` : '') })
     .filter(([, v]) => v)
     .map(([k, v]) => `${k}: ${v}`)
     .join('\n')
   await navigator.clipboard.writeText(text)
-  say('No pinnotes plugin on this server: the note is on the clipboard, without a picture.')
+  say('No pinnotes plugin on this server: the note is on the clipboard' + (png ? ', the picture in your downloads.' : '.'))
 }
 
 function cssPath(el) {

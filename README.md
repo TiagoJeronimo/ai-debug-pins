@@ -1,9 +1,10 @@
 # pinnotes
 
-Click a spot on your dev page, type a line, press Enter. You get a real screenshot with a ring where you clicked,
+Click a spot on your dev page, type a line, press Enter. You get a picture of the page with a ring where you clicked,
 plus your words and where they point in the code, in `.notes/notes.md`. Then tell Claude Code: "read my notes".
 
-It works on WebGL games as well as on plain pages, because the picture is the screen itself, not a redrawing of the DOM.
+No permission and no extension: the page draws its own picture ([modern-screenshot](https://github.com/qq15725/modern-screenshot)).
+WebGL canvases come out too, because the picture is taken right after the page has drawn a frame.
 
 ## Use
 
@@ -20,14 +21,12 @@ Run the dev server, click ✎ at the bottom right, click a spot, type, Enter (Es
 Each note in `.notes/notes.md` has the picture, the page, the viewport and pixel ratio, the point, a short CSS path, the
 element's text and, on React pages, the nearest components and the file. `.notes/` ignores itself in git.
 
-## Pictures: macOS, one permission
+## The picture
 
-Pictures are taken with macOS's `screencapture`, of the browser's visible page area. The app that runs the dev
-server (your terminal, or your editor) needs **Screen Recording** permission once: System Settings › Privacy & Security.
-Without it, or on Windows and Linux for now, the note is saved without a picture and says why.
-
-Being a real screenshot, it also catches whatever floats over the browser at that moment (a video call, a notification).
-Page zoom other than 100% puts the picture off.
+It is redrawn from the page, not a screenshot, so it can differ in small ways (a stray character from an unusual CSS
+`content`, a lighter shadow). Each note says so, and the skill tells Claude to act on your words and the element they
+point at, never on how the picture looks. Without the plugin (the client put on a page by hand) the note goes to the
+clipboard and the picture to your downloads.
 
 ## Claude Code
 
