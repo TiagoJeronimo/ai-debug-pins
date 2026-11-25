@@ -4,6 +4,7 @@
   "description": "Click a spot on your dev page, type a note: a real screenshot with a dot, for Claude Code to read.",
   "type": "module",
   "license": "MIT",
+  "keywords": ["vite-plugin", "claude-code", "screenshot", "notes", "ai"],
   "exports": {
     ".": "./vite.js"
   },

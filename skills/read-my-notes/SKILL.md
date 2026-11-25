@@ -1,6 +1,6 @@
 ---
 name: read-my-notes
-description: Read the notes the user pinned on their dev pages (.notes/notes.md, each with a screenshot and a red dot) and act on them. Use when the user says "read my notes", "my notes", "check the notes" or similar.
+description: Read the notes the user pinned on their dev pages (.notes/notes.md, each with a picture of the page and a red ring) and act on them. Use when the user says "read my notes", "my notes", "check the notes" or similar.
 ---
 
 # Read my notes
