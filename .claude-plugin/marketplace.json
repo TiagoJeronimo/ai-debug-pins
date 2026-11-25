@@ -1,0 +1,5 @@
+{
+  "name": "pinnotes",
+  "owner": { "name": "Tiago Jerónimo Silva" },
+  "plugins": [{ "name": "pinnotes", "source": "./", "description": "Read the notes you pinned on your dev pages." }]
+}

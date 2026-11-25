@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>pinnotes demo</title>
+<style>
+  body { margin: 0; font: 16px system-ui, sans-serif; background: #f6f1e7; color: #333; }
+  h1 { position: absolute; left: 24px; top: 8px; margin: 0; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+</style>
+<h1>A spinning square. Click ✎, then click it.</h1>
+<canvas></canvas>
+<script type="module">
+  // Plain WebGL, no preserveDrawingBuffer: the picture is a real screenshot, so it comes out anyway.
+  const c = document.querySelector('canvas')
+  const gl = c.getContext('webgl')
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s }
+  const p = gl.createProgram()
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, 'attribute vec2 a; uniform float t; void main() { float c = cos(t), s = sin(t); gl_Position = vec4(mat2(c, -s, s, c) * a * 0.4, 0, 1); }'))
+  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, 'precision mediump float; void main() { gl_FragColor = vec4(0.3, 0.6, 0.9, 1); }'))
+  gl.linkProgram(p)
+  gl.useProgram(p)
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+  gl.enableVertexAttribArray(0)
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
+  const t = gl.getUniformLocation(p, 't')
+  requestAnimationFrame(function frame(ms) {
+    c.width = innerWidth * devicePixelRatio
+    c.height = innerHeight * devicePixelRatio
+    gl.viewport(0, 0, c.width, c.height)
+    gl.clearColor(0.96, 0.94, 0.9, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.uniform1f(t, ms / 1000)
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    requestAnimationFrame(frame)
+  })
+</script>

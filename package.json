@@ -1,0 +1,27 @@
+{
+  "name": "pinnotes",
+  "version": "0.1.0",
+  "description": "Click a spot on your dev page, type a note: a real screenshot with a dot, for Claude Code to read.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./vite.js"
+  },
+  "files": [
+    "vite.js",
+    "client.js",
+    "notes.js",
+    "index.d.ts"
+  ],
+  "types": "./index.d.ts",
+  "scripts": {
+    "test": "node --test",
+    "demo": "vite demo"
+  },
+  "peerDependencies": {
+    "vite": ">=5"
+  },
+  "devDependencies": {
+    "vite": "^8.3.8"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "pinnotes",
+  "description": "Read the notes you pinned on your dev pages (.notes/notes.md, with pictures) and act on them.",
+  "version": "0.1.0"
+}
