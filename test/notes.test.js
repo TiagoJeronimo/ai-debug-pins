@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { saveNote, takeNew } from '../notes.js'
 
 test('a note is written with its picture, then taken once', async () => {
-  const dir = join(await mkdtemp(join(tmpdir(), 'pinnotes-')), '.notes')
+  const dir = join(await mkdtemp(join(tmpdir(), 'ai-debug-pins-')), '.notes')
   const time = new Date('2026-11-25T10:00:00.000Z')
   const id = await saveNote(dir, {
     time, note: 'Too big\nand pink', url: 'http://localhost:5173/', viewport: '1280x800', dpr: 2, point: '10, 20',

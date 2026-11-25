@@ -1,9 +1,9 @@
 // UserPromptSubmit: adds notes pinned since the last message to it, and marks them read.
-// Off with PINNOTES_HOOK=0.
+// Off with AI_DEBUG_PINS_HOOK=0.
 import { join } from 'node:path'
 import { takeNew } from '../notes.js'
 
-if (process.env.PINNOTES_HOOK !== '0') {
+if (process.env.AI_DEBUG_PINS_HOOK !== '0') {
   let raw = ''
   for await (const chunk of process.stdin) raw += chunk
   const dir = join(JSON.parse(raw).cwd ?? process.cwd(), '.notes')

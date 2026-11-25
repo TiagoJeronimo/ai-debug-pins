@@ -1,4 +1,4 @@
-# pinnotes
+# ai-debug-pins
 
 Click a spot on your dev page, type a line, press Enter. Claude gets a picture of the page with a ring where you
 clicked, your words, and where they point in the code. No more screenshot, paste, explain.
@@ -10,8 +10,8 @@ Made for [Claude Code](https://claude.com/claude-code): new notes go along with 
 
 Paste this into Claude Code, in your project:
 
-> Set up pinnotes here: run `claude plugin marketplace add OWNER/pinnotes` and `claude plugin install pinnotes@pinnotes`,
-> then `npm i -D pinnotes`, and add `pinnotes()` (`import pinnotes from 'pinnotes'`) to the plugins in my Vite config.
+> Set up ai-debug-pins here: run `claude plugin marketplace add OWNER/ai-debug-pins` and `claude plugin install ai-debug-pins@ai-debug-pins`,
+> then `npm i -D ai-debug-pins`, and add `debugPins()` (`import debugPins from 'ai-debug-pins'`) to the plugins in my Vite config.
 
 Then restart the dev server and Claude Code.
 
@@ -27,27 +27,27 @@ page, viewport, point, a short CSS path, the element's text and, on React pages,
 ## Set it up by hand
 
 ```bash
-npm i -D pinnotes
+npm i -D ai-debug-pins
 ```
 
 ```js
 // vite.config.js
-import pinnotes from 'pinnotes'
+import debugPins from 'ai-debug-pins'
 
-export default { plugins: [pinnotes()] }
+export default { plugins: [debugPins()] }
 ```
 
 Only on `vite serve`: nothing reaches a build. For Claude Code:
 
 ```bash
-claude plugin marketplace add OWNER/pinnotes
+claude plugin marketplace add OWNER/ai-debug-pins
 ```
 
 ```bash
-claude plugin install pinnotes@pinnotes
+claude plugin install ai-debug-pins@ai-debug-pins
 ```
 
-To stop notes going along with your messages, set `PINNOTES_HOOK=0`; "read my notes" still works.
+To stop notes going along with your messages, set `AI_DEBUG_PINS_HOOK=0`; "read my notes" still works.
 
 ## The picture
 

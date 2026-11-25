@@ -1,9 +1,9 @@
 // The note button. Plain DOM, no framework, so it works on any page. Its UI lives in a shadow root, left out of the
 // picture.
 const POST = (path, body) =>
-  fetch('/@pinnotes/' + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+  fetch('/@ai-debug-pins/' + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
 
-const host = document.createElement('pinnotes-ui')
+const host = document.createElement('ai-debug-pins-ui')
 const ui = host.attachShadow({ mode: 'open' })
 ui.innerHTML = `<style>
   :host { all: initial; font: 14px/1.4 system-ui, sans-serif; }
@@ -140,7 +140,7 @@ async function copy(note) {
     .map(([k, v]) => `${k}: ${v}`)
     .join('\n')
   await navigator.clipboard.writeText(text)
-  say('No pinnotes plugin on this server: the note is on the clipboard' + (png ? ', the picture in your downloads.' : '.'))
+  say('No ai-debug-pins plugin on this server: the note is on the clipboard' + (png ? ', the picture in your downloads.' : '.'))
 }
 
 function cssPath(el) {

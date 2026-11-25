@@ -1,3 +1,3 @@
-import pinnotes from '../vite.js'
+import debugPins from '../vite.js'
 
-export default { plugins: [pinnotes()] }
+export default { plugins: [debugPins()] }

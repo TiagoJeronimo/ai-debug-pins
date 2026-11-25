@@ -1,5 +1,5 @@
 {
-  "name": "pinnotes",
+  "name": "ai-debug-pins",
   "owner": { "name": "Tiago Jerónimo Silva" },
-  "plugins": [{ "name": "pinnotes", "source": "./", "description": "Read the notes you pinned on your dev pages." }]
+  "plugins": [{ "name": "ai-debug-pins", "source": "./", "description": "Read the notes you pinned on your dev pages." }]
 }
