@@ -3,7 +3,7 @@
 Click a spot on your dev page, type a line, press Enter. Claude gets a picture of the page with a ring where you
 clicked, your words, and where they point in the code. No more screenshot, paste, explain.
 
-![Click ✎, click a spot on the page, type a note: Claude gets the picture with a ring and your words](https://raw.githubusercontent.com/TiagoJeronimo/ai-debug-pins/main/docs/demo.gif)
+![Click the pin, click the thing you mean, type a note: Claude gets the picture with a ring and your words](https://raw.githubusercontent.com/TiagoJeronimo/ai-debug-pins/main/docs/demo.gif)
 
 Made for [Claude Code](https://claude.com/claude-code): new notes go along with your next message by themselves. Works
 with any framework (React, Vue, Svelte, Next.js, plain HTML), on WebGL games as well as plain pages. The notes are plain
@@ -128,6 +128,8 @@ It takes notes only from pages on your own machine. Another port: `npx ai-debug-
 To stop notes going along with your messages, set `AI_DEBUG_PINS_HOOK=0`; "read my notes" still works.
 
 ## The picture
+
+![On a WebGL game: the canvas comes out in the picture too](https://raw.githubusercontent.com/TiagoJeronimo/ai-debug-pins/main/docs/demo-webgl.gif)
 
 No permission and no extension: the page draws its own picture
 ([modern-screenshot](https://github.com/qq15725/modern-screenshot)), right after it has drawn a frame, so WebGL comes out
