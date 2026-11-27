@@ -9,6 +9,8 @@ Made for [Claude Code](https://claude.com/claude-code): new notes go along with 
 with any framework (React, Vue, Svelte, Next.js, plain HTML), on WebGL games as well as plain pages. The notes are plain
 files, so **other AI tools can read them too** (see the end).
 
+- Click one thing, drag an area, select some text, or hold Shift for several in one note. <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>
+  starts pinning.
 - No browser extension, no screen-recording permission: the page draws its own picture.
 - Development only: nothing reaches a production build.
 - Notes stay in your project, in `.notes/`, which git ignores. Nothing is sent anywhere else.
