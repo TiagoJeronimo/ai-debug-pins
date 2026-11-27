@@ -1,5 +1,6 @@
 {
   "name": "ai-debug-pins",
+  "description": "Pin notes on your dev pages and have them reach Claude Code with a picture.",
   "owner": { "name": "Tiago Jerónimo Silva" },
   "plugins": [{ "name": "ai-debug-pins", "source": "./", "description": "Read the notes you pinned on your dev pages." }]
 }
