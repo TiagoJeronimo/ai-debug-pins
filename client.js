@@ -24,6 +24,9 @@ ui.innerHTML = `<style>
   .fab:focus-visible, button:focus-visible, textarea:focus-visible { outline: 2px solid ${RED}; outline-offset: 2px; }
   .fab[aria-pressed='true'] { background: ${RED}; border-color: ${RED}; }
   .layer { position: fixed; inset: 0; z-index: 2147483646; cursor: crosshair; }
+  .layer.open { cursor: default; }
+  .card.shake { animation: shake .3s; }
+  @keyframes shake { 25% { translate: -6px; } 50% { translate: 5px; } 75% { translate: -3px; } }
   .hint { top: 14px; left: 50%; transform: translateX(-50%); padding: 7px 14px; border-radius: 999px;
     background: var(--bg); border: 1px solid var(--line); box-shadow: 0 4px 14px #0005; pointer-events: none;
     white-space: nowrap; }
@@ -79,6 +82,7 @@ let pick = null // the click: the point and the element under it
 const reset = () => {
   pick = null
   for (const el of [layer, hint, hl, dot, card]) el.hidden = true
+  layer.classList.remove('open')
   input.value = ''
   send.disabled = true
   fab.setAttribute('aria-pressed', 'false')
@@ -116,6 +120,7 @@ const name = (el) => {
 // While picking, the element under the pointer lights up with its name, so it is clear what the note will be about.
 let frame = 0
 layer.onpointermove = (e) => {
+  if (pick) return
   cancelAnimationFrame(frame)
   frame = requestAnimationFrame(() => {
     const el = under(e.clientX, e.clientY)
@@ -130,10 +135,20 @@ layer.onpointermove = (e) => {
 layer.onpointerleave = () => (hl.hidden = true)
 
 layer.onclick = (e) => {
+  // A click beside an open note never reaches the page. With nothing typed it closes the note; with words typed it
+  // keeps them (a stray click should not lose a sentence) and nudges the card instead.
+  if (pick) {
+    if (!input.value.trim()) return reset()
+    card.classList.remove('shake')
+    void card.offsetWidth // restarts the animation on a second stray click
+    card.classList.add('shake')
+    return input.focus()
+  }
   cancelAnimationFrame(frame)
   const el = under(e.clientX, e.clientY)
   pick = { x: e.clientX, y: e.clientY, el }
-  layer.hidden = hint.hidden = hl.hidden = true
+  layer.classList.add('open')
+  hint.hidden = hl.hidden = true
   $('.about b').textContent = el ? name(el) : 'the page'
   Object.assign(dot.style, { left: e.clientX + 'px', top: e.clientY + 'px' })
   // Beside the ring, on whichever side has room.
