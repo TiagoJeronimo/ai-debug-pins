@@ -34,7 +34,8 @@ ui.innerHTML = `<style>
   .hl { border: 2px solid ${RED}; background: #e5484d1a; border-radius: 3px; pointer-events: none; z-index: 2147483646; }
   .tag { position: absolute; left: -2px; bottom: 100%; margin-bottom: 4px; padding: 1px 6px; border-radius: 4px;
     background: ${RED}; color: #fff; font-size: 11px; white-space: nowrap; }
-  .hl.low .tag { bottom: auto; top: 100%; margin: 4px 0 0; }
+  /* No room above (a full-screen canvas): the tag goes inside the outline. */
+  .hl.low .tag { bottom: auto; top: 4px; left: 4px; margin: 0; }
   .dot { width: 28px; height: 28px; margin: -14px; border-radius: 50%; border: 3.5px solid ${RED};
     box-shadow: 0 0 0 2px #fff, 0 0 0 3px #0006; pointer-events: none; }
   .card { width: 320px; padding: 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line);

@@ -28,7 +28,8 @@ Then restart the dev server and Claude Code.
 
 1. On any page in development, click the pin at the bottom right.
 2. Click the thing you mean (it lights up as you hover), type what you want, press Enter. Pin as many as you like.
-3. Back in Claude Code, write your next message as usual, say "fix these". The notes go with it: the chat shows
+3. Back in Claude Code, write your next message as usual, say "fix these". You don't have to mention the notes or
+   paste anything: the plugin adds them to whatever you send next. The chat shows
    "📍 2 notes sent with this message", and Claude says what it got, opens each picture, finds the code and does what
    each note asks.
 
