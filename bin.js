@@ -9,9 +9,10 @@ import { handler, claudePlugin, HINT } from './server.js'
 const port = Number(process.argv[2] || process.env.PORT || 7777)
 const server = createServer(handler())
 server.on('error', (e) => {
-  console.error(e.code === 'EADDRINUSE'
-    ? `ai-debug-pins: port ${port} is taken (another copy of this server?). Another port: npx ai-debug-pins ${port + 1}, and the same port in the script tag.`
-    : `ai-debug-pins: ${e.message}`)
+  const taken =
+    `ai-debug-pins: port ${port} is taken (another copy of this server?). ` +
+    `Another port: npx ai-debug-pins ${port + 1}, and the same port in the script tag.`
+  console.error(e.code === 'EADDRINUSE' ? taken : `ai-debug-pins: ${e.message}`)
   process.exit(1)
 })
 server.listen(port, '127.0.0.1', () => {
