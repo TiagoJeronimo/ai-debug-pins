@@ -1,5 +1,5 @@
 {
   "name": "ai-debug-pins",
   "description": "Read the notes you pinned on your dev pages (.notes/notes.md, with pictures) and act on them.",
-  "version": "0.4.0"
+  "version": "0.5.0"
 }

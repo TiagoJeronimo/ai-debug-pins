@@ -1,5 +1,5 @@
 // Writing and reading .notes/notes.md. Shared by the Vite plugin (writes) and the Claude Code hook (reads).
-import { mkdir, writeFile, appendFile, readFile } from 'node:fs/promises'
+import { mkdir, writeFile, appendFile, readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
 const line = (s) => String(s ?? '').replace(/\s+/g, ' ').trim()
@@ -35,4 +35,17 @@ export async function takeNew(dir) {
   const fresh = md.split(/(?=^## )/m).filter((s) => /^## .* · new$/m.test(s.split('\n')[0]))
   if (fresh.length) await writeFile(file, md.replace(/^(## .*) · new$/gm, '$1 · read'))
   return fresh.map((s) => s.trim())
+}
+
+/** Deletes the notes marked done, and their pictures. Returns how many went. */
+export async function clearDone(dir) {
+  const file = join(dir, 'notes.md')
+  const md = await readFile(file, 'utf8').catch(() => '')
+  const done = (s) => /^## .* · done$/m.test(s.split('\n')[0])
+  const parts = md.split(/(?=^## )/m)
+  const gone = parts.filter(done)
+  if (!gone.length) return 0
+  await writeFile(file, parts.filter((s) => !done(s)).join(''))
+  for (const s of gone) await rm(join(dir, s.match(/^## (\S+)/)[1] + '.png'), { force: true })
+  return gone.length
 }

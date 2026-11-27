@@ -35,6 +35,9 @@ Then restart the dev server and Claude Code.
 
 Or say "read my notes" at any time, for every note not yet done.
 
+A handled note stays in the file, marked done, with its picture beside it: a record of what you asked for. Say
+"clear my notes" to delete the done ones and their pictures.
+
 Notes live in `.notes/notes.md`, pictures beside them; `.notes/` ignores itself in git. A note looks like this:
 
 ```md

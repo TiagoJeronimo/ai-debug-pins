@@ -1,9 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, readdir } from 'node:fs/promises'
+import { mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { saveNote, takeNew } from '../notes.js'
+import { saveNote, takeNew, clearDone } from '../notes.js'
 
 test('a note is written with its picture, then taken once', async () => {
   const dir = join(await mkdtemp(join(tmpdir(), 'ai-debug-pins-')), '.notes')
@@ -29,4 +29,13 @@ test('a note is written with its picture, then taken once', async () => {
   assert.match(fresh[1], /No picture/)
   assert.deepEqual(await takeNew(dir), [])
   assert.equal((await readFile(join(dir, 'notes.md'), 'utf8')).match(/· read$/gm).length, 2)
+
+  // The first is done, the second not: only the first goes, with its picture.
+  await writeFile(join(dir, 'notes.md'), (await readFile(join(dir, 'notes.md'), 'utf8')).replace('-000Z · read', '-000Z · done'))
+  assert.equal(await clearDone(dir), 1)
+  assert.deepEqual((await readdir(dir)).sort(), ['.gitignore', 'notes.md'])
+  const left = await readFile(join(dir, 'notes.md'), 'utf8')
+  assert.doesNotMatch(left, /Too big/)
+  assert.match(left, /No picture/)
+  assert.equal(await clearDone(dir), 0)
 })
