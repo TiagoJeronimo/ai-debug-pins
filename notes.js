@@ -11,10 +11,25 @@ export async function saveNote(dir, note, png) {
   const id = (note.time instanceof Date ? note.time : new Date()).toISOString().replace(/[:.]/g, '-')
   if (png) await writeFile(join(dir, id + '.png'), png)
   const quote = String(note.note ?? '').trim().split('\n').map((l) => '> ' + l).join('\n')
-  const c = note.component
   // A server component's file comes as a path on disk: shown from the project's root, like the others.
   const root = dirname(dir)
-  if (c?.file && isAbsolute(c.file) && c.file.startsWith(root)) c.file = relative(root, c.file)
+  const about = (t) => {
+    const c = t.component
+    if (c?.file && isAbsolute(c.file) && c.file.startsWith(root)) c.file = relative(root, c.file)
+    return [
+      t.area
+        ? `area: ${line(t.area)} (the frame: left, top, width x height, in CSS pixels)`
+        : `point: ${line(t.point)} (the ring, in CSS pixels)`,
+      `element: \`${line(t.path)}\``,
+      t.text && `text: "${line(t.text)}"`,
+      c?.names?.length && `component: ${c.names.map(line).join(' ← ')}${c.file ? ` (${line(c.file)})` : ''}`,
+    ].filter(Boolean)
+  }
+  // One note can be about several things, numbered in the picture. An older client sends one, in the note itself.
+  const targets = (Array.isArray(note.targets) ? note.targets : [note]).filter((t) => t && typeof t === 'object').slice(0, 20)
+  const where = targets.length === 1
+    ? about(targets[0]).map((l) => '- ' + l)
+    : targets.flatMap((t, i) => [`- mark ${i + 1}:`, ...about(t).map((l) => '  - ' + l)])
   const fields = [
     png
       ? `![picture](${id}.png)\n_The picture is redrawn by the page from its DOM: small differences from the screen are not bugs._`
@@ -22,10 +37,7 @@ export async function saveNote(dir, note, png) {
     '',
     `- page: ${line(note.url)}`,
     `- viewport: ${line(note.viewport)} @${line(note.dpr)}x`,
-    `- point: ${line(note.point)} (the ring, in CSS pixels)`,
-    `- element: \`${line(note.path)}\``,
-    note.text && `- text: "${line(note.text)}"`,
-    c?.names?.length && `- component: ${c.names.map(line).join(' ← ')}${c.file ? ` (${line(c.file)})` : ''}`,
+    ...where,
   ].filter((f) => f !== undefined && f !== false && f !== '')
   await appendFile(join(dir, 'notes.md'), `\n## ${id} · new\n\n${quote}\n\n${fields.join('\n')}\n`)
   return id

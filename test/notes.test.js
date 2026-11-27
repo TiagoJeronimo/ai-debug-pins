@@ -39,3 +39,19 @@ test('a note is written with its picture, then taken once', async () => {
   assert.match(left, /No picture/)
   assert.equal(await clearDone(dir), 0)
 })
+
+test('one note about several things lists each mark, an area as a frame', async () => {
+  const dir = join(await mkdtemp(join(tmpdir(), 'ai-debug-pins-')), '.notes')
+  await saveNote(dir, {
+    note: 'Line these up', url: 'http://localhost:5173/', viewport: '1280x800', dpr: 1,
+    targets: [
+      { point: '10, 20', path: 'main > h1', text: 'Hello' },
+      { area: '40, 50, 300x120', path: 'main > ul', component: { names: ['List'], file: 'src/List.tsx' } },
+      null,
+    ],
+  })
+  const md = await readFile(join(dir, 'notes.md'), 'utf8')
+  assert.match(md, /- mark 1:\n  - point: 10, 20 \(the ring, in CSS pixels\)\n  - element: `main > h1`\n  - text: "Hello"\n- mark 2:\n  - area: 40, 50, 300x120 \(the frame/)
+  assert.match(md, /  - component: List \(src\/List\.tsx\)\n$/)
+  assert.doesNotMatch(md, /mark 3/)
+})

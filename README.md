@@ -34,8 +34,13 @@ Then restart the dev server and Claude Code.
 
 ## Use
 
-1. On any page in development, click the pin at the bottom right.
+1. On any page in development, click the pin at the bottom right, or press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>
+   (<kbd>⌥</kbd><kbd>⇧</kbd><kbd>P</kbd> on a Mac).
 2. Click the thing you mean (it lights up as you hover), type what you want, press Enter. Pin as many as you like.
+   - **An area:** drag a box instead of clicking.
+   - **Several things in one note:** hold <kbd>Shift</kbd> while you click or drag; let go of it for the last one.
+     They are numbered in the picture.
+   - **Some text:** select it first, then press the pin. The note is about exactly those words.
 3. Back in Claude Code, write your next message as usual, say "fix these". You don't have to mention the notes or
    paste anything: the plugin adds them to whatever you send next. The chat shows
    "📍 2 notes sent with this message", and Claude says what it got, opens each picture, finds the code and does what
@@ -61,7 +66,8 @@ Notes live in `.notes/notes.md`, pictures beside them; `.notes/` ignores itself 
 - component: Canvas ← Picture ← CastlePage (src/games/Picture.tsx)
 ```
 
-On React pages it finds the nearest components and the file they are in.
+On React pages it finds the nearest components and the file they are in. A note about several things lists each as
+`mark 1`, `mark 2`..., an area as `area: left, top, width x height`.
 
 ## Set it up by hand
 
@@ -155,8 +161,8 @@ Gemini CLI, ...). Add this to your `AGENTS.md`, then say "read my notes":
 ## Notes pinned on the page
 
 When I say "read my notes", read `.notes/notes.md`. Each `## <id> · <status>` section is a note (`new`, `read` or
-`done`); handle every one that is not `done`, oldest first. Open its picture (`.notes/<id>.png`): the red ring is
-where I clicked. The `>` quote is what I want; `element`, `text` and `component` point to the code. The picture is
+`done`); handle every one that is not `done`, oldest first. Open its picture (`.notes/<id>.png`): a red ring is
+where I clicked, a red frame an area I dragged or text I selected; several are numbered as `mark 1`, `mark 2`... The `>` quote is what I want; `element`, `text` and `component` point to the code. The picture is
 redrawn by the page and can differ slightly from the screen: act on my words, never on how the picture looks. When a
 note is handled, change its heading to `· done`.
 ```

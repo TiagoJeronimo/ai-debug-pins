@@ -8,6 +8,9 @@ const RED = '#e5484d'
 const PIN = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.8-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 15.2 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>`
 
+// Option on a Mac types a character instead (∏), so the shortcut is read from the key's place, not what it types.
+const KEY = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌥⇧P' : 'Alt+Shift+P'
+
 const host = document.createElement('ai-debug-pins-ui')
 const ui = host.attachShadow({ mode: 'open' })
 // Dark and small, so it reads on any page and is not mistaken for part of it.
@@ -38,6 +41,13 @@ ui.innerHTML = `<style>
   .hl.low .tag { bottom: auto; top: 4px; left: 4px; margin: 0; }
   .dot { width: 28px; height: 28px; margin: -14px; border-radius: 50%; border: 3.5px solid ${RED};
     box-shadow: 0 0 0 2px #fff, 0 0 0 3px #0006; pointer-events: none; }
+  .box { border: 3px solid ${RED}; border-radius: 4px; box-shadow: 0 0 0 2px #fff, 0 0 0 3px #0006;
+    pointer-events: none; }
+  .drag { border: 2px dashed ${RED}; background: #e5484d1a; pointer-events: none; z-index: 2147483646; }
+  /* Numbered only when the note is about more than one thing, as they are in the picture. */
+  .n { display: none; position: absolute; left: 100%; top: -12px; min-width: 18px; padding: 0 5px; border-radius: 9px;
+    background: ${RED}; color: #fff; font-size: 11px; font-weight: 700; text-align: center; }
+  .marks:has(> * + *) .n { display: block; }
   .card { width: 320px; padding: 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line);
     box-shadow: 0 10px 30px #0006; animation: in .12s ease-out; }
   @keyframes in { from { opacity: 0; transform: translateY(4px); } }
@@ -57,11 +67,13 @@ ui.innerHTML = `<style>
   .toast.bad { border-color: ${RED}; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
-<button class="fab top" title="Pin a note" aria-label="Pin a note" aria-pressed="false">${PIN}</button>
+<button class="fab top" title="Pin a note (${KEY})" aria-label="Pin a note" aria-keyshortcuts="Alt+Shift+P"
+  aria-pressed="false">${PIN}</button>
 <div class="layer" hidden></div>
-<div class="hint top" hidden>Click what your note is about <kbd>Esc</kbd></div>
+<div class="hint top" hidden>Click what your note is about · drag for an area · <kbd>Shift</kbd> for several · <kbd>Esc</kbd></div>
 <div class="hl top" hidden><span class="tag"></span></div>
-<div class="dot top" hidden></div>
+<div class="drag top" hidden></div>
+<div class="marks"></div>
 <form class="card top" hidden>
   <div class="about">On <b></b></div>
   <textarea placeholder="What should change?" aria-label="Note" rows="3"></textarea>
@@ -75,14 +87,21 @@ document.documentElement.append(host)
 for (const type of ['keydown', 'keyup', 'keypress']) host.addEventListener(type, (e) => e.stopPropagation())
 
 const $ = (s) => ui.querySelector(s)
-const [fab, layer, hint, hl, dot, card, input, toast] =
-  ['.fab', '.layer', '.hint', '.hl', '.dot', '.card', 'textarea', '.toast'].map($)
+const [fab, layer, hint, hl, drag, marks, card, input, toast] =
+  ['.fab', '.layer', '.hint', '.hl', '.drag', '.marks', '.card', 'textarea', '.toast'].map($)
 const send = $('.send')
-let pick = null // the click: the point and the element under it
+// What the note is about: points clicked ({x, y}) and areas dragged or text selected ({x, y, w, h}), each with the
+// element there.
+let picks = []
+let open = false // the card is up
+let down = null // where a press began, to tell a click from a drag
 
 const reset = () => {
-  pick = null
-  for (const el of [layer, hint, hl, dot, card]) el.hidden = true
+  picks = []
+  open = false
+  down = null
+  marks.replaceChildren()
+  for (const el of [layer, hint, hl, drag, card]) el.hidden = true
   layer.classList.remove('open')
   input.value = ''
   send.disabled = true
@@ -97,12 +116,37 @@ const say = (text, bad = false, ms = bad ? 9000 : 5000) => {
   if (ms) say.t = setTimeout(() => (toast.hidden = true), ms)
 }
 
-fab.onclick = () => {
-  if (fab.getAttribute('aria-pressed') === 'true') return reset()
-  layer.hidden = hint.hidden = false
-  fab.setAttribute('aria-pressed', 'true')
+// Text selected on the page when pinning starts is what the note is about: no picking.
+const selected = () => {
+  const s = getSelection()
+  if (!s?.rangeCount || s.isCollapsed) return null
+  const range = s.getRangeAt(0)
+  const r = range.getBoundingClientRect()
+  const text = s.toString().trim()
+  if (!text || !r.width) return null
+  let el = range.commonAncestorContainer
+  if (el.nodeType !== 1) el = el.parentElement
+  return { x: r.left, y: r.top, w: r.width, h: r.height, el, text: text.slice(0, 500) }
 }
-addEventListener('keydown', (e) => e.key === 'Escape' && !layer.hidden && reset(), true)
+const start = (sel) => {
+  if (fab.getAttribute('aria-pressed') === 'true') return reset()
+  fab.setAttribute('aria-pressed', 'true')
+  if (sel) return add(sel, true)
+  layer.hidden = hint.hidden = false
+}
+// Read on the press: by the click, pressing the button may have cleared the selection.
+let sel = null
+fab.onpointerdown = () => (sel = selected())
+fab.onclick = () => start(sel)
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !layer.hidden) return reset()
+  // Not while a note is being written: it would lose the words.
+  if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyP' && !open) {
+    e.preventDefault()
+    e.stopPropagation()
+    start(selected())
+  }
+}, true)
 input.oninput = () => (send.disabled = !input.value.trim())
 input.onkeydown = (e) => {
   if (e.key === 'Escape') reset()
@@ -121,7 +165,13 @@ const name = (el) => {
 // While picking, the element under the pointer lights up with its name, so it is clear what the note will be about.
 let frame = 0
 layer.onpointermove = (e) => {
-  if (pick) return
+  if (open) return
+  if (down && (Math.abs(e.clientX - down.x) > 6 || Math.abs(e.clientY - down.y) > 6)) {
+    const b = box(down, e)
+    Object.assign(drag.style, { left: b.x + 'px', top: b.y + 'px', width: b.w + 'px', height: b.h + 'px' })
+    drag.hidden = false
+    return (hl.hidden = true)
+  }
   cancelAnimationFrame(frame)
   frame = requestAnimationFrame(() => {
     const el = under(e.clientX, e.clientY)
@@ -135,51 +185,91 @@ layer.onpointermove = (e) => {
 }
 layer.onpointerleave = () => (hl.hidden = true)
 
-layer.onclick = (e) => {
+const box = (a, b) => ({
+  x: Math.min(a.x, b.clientX), y: Math.min(a.y, b.clientY), w: Math.abs(b.clientX - a.x), h: Math.abs(b.clientY - a.y),
+})
+// The smallest element holding the whole area.
+const around = (b) => {
+  let el = under(b.x + b.w / 2, b.y + b.h / 2)
+  const holds = (r) => r.left <= b.x + 1 && r.top <= b.y + 1 && r.right >= b.x + b.w - 1 && r.bottom >= b.y + b.h - 1
+  while (el?.parentElement && !holds(el.getBoundingClientRect())) el = el.parentElement
+  return el
+}
+
+layer.onpointerdown = (e) => {
+  if (open || e.button) return
+  down = { x: e.clientX, y: e.clientY }
+  layer.setPointerCapture(e.pointerId)
+}
+layer.onpointerup = (e) => {
   // A click beside an open note never reaches the page. With nothing typed it closes the note; with words typed it
   // keeps them (a stray click should not lose a sentence) and nudges the card instead.
-  if (pick) {
+  if (open) {
     if (!input.value.trim()) return reset()
     card.classList.remove('shake')
     void card.offsetWidth // restarts the animation on a second stray click
     card.classList.add('shake')
     return input.focus()
   }
+  if (!down) return
   cancelAnimationFrame(frame)
-  const el = under(e.clientX, e.clientY)
-  pick = { x: e.clientX, y: e.clientY, el }
+  const dragged = !drag.hidden
+  const b = box(down, e)
+  down = null
+  drag.hidden = true
+  // Shift keeps picking: one note about several things.
+  add(dragged ? { ...b, el: around(b) } : { x: e.clientX, y: e.clientY, el: under(e.clientX, e.clientY) }, !e.shiftKey)
+}
+
+const add = (t, done) => {
+  picks.push(t)
+  const m = document.createElement('div')
+  m.className = (t.w ? 'box' : 'dot') + ' top'
+  Object.assign(m.style, { left: t.x + 'px', top: t.y + 'px', width: t.w && t.w + 'px', height: t.h && t.h + 'px' })
+  m.innerHTML = `<span class="n">${picks.length}</span>`
+  marks.append(m)
+  if (!done) return
+  open = true
+  layer.hidden = false
   layer.classList.add('open')
   hint.hidden = hl.hidden = true
-  $('.about b').textContent = el ? name(el) : 'the page'
-  Object.assign(dot.style, { left: e.clientX + 'px', top: e.clientY + 'px' })
-  // Beside the ring, on whichever side has room.
+  const first = picks[0]
+  $('.about b').textContent =
+    (first.text ? `“${first.text.slice(0, 40)}${first.text.length > 40 ? '…' : ''}”` : first.el ? name(first.el) : 'the page') +
+    (picks.length > 1 ? ` and ${picks.length - 1} more` : '')
+  // Beside the last mark, on whichever side has room.
+  const x = t.x + (t.w ?? 0), y = t.y
   const w = 320, h = 150
   Object.assign(card.style, {
-    left: Math.max(8, e.clientX + 20 + w < innerWidth ? e.clientX + 20 : e.clientX - 20 - w) + 'px',
-    top: Math.max(8, e.clientY + 20 + h < innerHeight ? e.clientY + 20 : e.clientY - 20 - h) + 'px',
+    left: Math.max(8, x + 20 + w < innerWidth ? x + 20 : t.x - 20 - w) + 'px',
+    top: Math.max(8, y + 20 + h < innerHeight ? y + 20 : y - 20 - h) + 'px',
   })
-  dot.hidden = card.hidden = false
+  card.hidden = false
   input.focus()
 }
 
 card.onsubmit = async (e) => {
   e.preventDefault()
-  const p = pick
-  if (!p || !input.value.trim()) return
+  const p = picks
+  if (!p.length || !input.value.trim()) return
+  const r = Math.round
   const note = {
     note: input.value,
     url: location.href,
     viewport: `${innerWidth}x${innerHeight}`,
     dpr: devicePixelRatio,
-    point: `${Math.round(p.x)}, ${Math.round(p.y)}`,
-    path: cssPath(p.el),
-    text: (p.el?.innerText || p.el?.getAttribute?.('aria-label') || p.el?.alt || '').trim().slice(0, 200),
-    component: react(p.el),
+    targets: p.map((t) => ({
+      point: t.w ? undefined : `${r(t.x)}, ${r(t.y)}`,
+      area: t.w ? `${r(t.x)}, ${r(t.y)}, ${r(t.w)}x${r(t.h)}` : undefined,
+      path: cssPath(t.el),
+      text: t.text ?? (t.el?.innerText || t.el?.getAttribute?.('aria-label') || t.el?.alt || '').trim().slice(0, 200),
+      component: react(t.el),
+    })),
   }
   reset()
   say('Pinning…', false, 0)
   try {
-    note.png = await withDot(await picture(), p.x, p.y)
+    note.png = await withMarks(await picture(), p)
   } catch (err) {
     note.noPicture = String(err?.message ?? err)
   }
@@ -226,29 +316,52 @@ async function picture() {
   return c
 }
 
-async function withDot(c, x, y) {
+async function withMarks(c, picks) {
   const k = devicePixelRatio
   const g = c.getContext('2d')
-  // A ring, not a filled dot, so what was clicked stays readable inside it.
-  for (const [width, colour] of [[8, '#0009'], [6, '#fff'], [3.5, RED]]) {
+  g.scale(k, k)
+  picks.forEach((t, i) => {
+    // A ring or a frame, not a filled dot, so what was picked stays readable inside it.
+    for (const [width, colour] of [[8, '#0009'], [6, '#fff'], [3.5, RED]]) {
+      g.beginPath()
+      if (t.w) g.roundRect(t.x, t.y, t.w, t.h, 4)
+      else g.arc(t.x, t.y, 14, 0, Math.PI * 2)
+      g.lineWidth = width
+      g.strokeStyle = colour
+      g.stroke()
+    }
+    // Numbered when there are several, as the note lists them.
+    if (picks.length < 2) return
+    const x = t.w ? t.x + t.w : t.x + 14, y = t.w ? t.y : t.y - 14
     g.beginPath()
-    g.arc(x * k, y * k, 14 * k, 0, Math.PI * 2)
-    g.lineWidth = width * k
-    g.strokeStyle = colour
+    g.arc(x, y, 10, 0, Math.PI * 2)
+    g.fillStyle = RED
+    g.fill()
+    g.lineWidth = 2
+    g.strokeStyle = '#fff'
     g.stroke()
-  }
+    g.fillStyle = '#fff'
+    g.font = 'bold 12px system-ui, sans-serif'
+    g.textAlign = 'center'
+    g.textBaseline = 'middle'
+    g.fillText(String(i + 1), x, y + 0.5)
+  })
   return c.toDataURL('image/png').split(',')[1]
 }
 
 // Without the plugin (the client put on a page by hand) there is nowhere to save: the words go to the clipboard
 // and the picture to the downloads.
 async function copy(note) {
-  const { png, component: c, ...rest } = note
+  const { png, targets, ...rest } = note
   if (png) Object.assign(document.createElement('a'), { href: 'data:image/png;base64,' + png, download: 'note.png' }).click()
-  const text = Object.entries({ ...rest, component: c && c.names.join(' ← ') + (c.file ? ` (${c.file})` : '') })
-    .filter(([, v]) => v)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join('\n')
+  const lines = (o) => Object.entries(o).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`)
+  const text = [
+    ...lines(rest),
+    ...targets.flatMap(({ component: c, ...t }, i) => [
+      ...(targets.length > 1 ? [`mark ${i + 1}:`] : []),
+      ...lines({ ...t, component: c && c.names.join(' ← ') + (c.file ? ` (${c.file})` : '') }),
+    ]),
+  ].join('\n')
   // The clipboard can refuse (the page lost focus while the picture was drawn): the picture is still downloaded.
   if (!(await navigator.clipboard.writeText(text).then(() => true, () => false))) return say('Nowhere to save the note, and the clipboard refused it.')
   say('No ai-debug-pins plugin on this server: the note is on the clipboard' + (png ? ', the picture in your downloads.' : '.'))
