@@ -228,7 +228,13 @@ const add = (t, done) => {
   Object.assign(m.style, { left: t.x + 'px', top: t.y + 'px', width: t.w && t.w + 'px', height: t.h && t.h + 'px' })
   m.innerHTML = `<span class="n">${picks.length}</span>`
   marks.append(m)
-  if (!done) return
+  if (done) show()
+}
+// Letting go of Shift after picking several opens the card: no extra click for the last one.
+addEventListener('keyup', (e) => e.key === 'Shift' && picks.length && !open && show(), true)
+
+const show = () => {
+  const t = picks.at(-1)
   open = true
   layer.hidden = false
   layer.classList.add('open')

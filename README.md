@@ -38,7 +38,7 @@ Then restart the dev server and Claude Code.
    (<kbd>⌥</kbd><kbd>⇧</kbd><kbd>P</kbd> on a Mac).
 2. Click the thing you mean (it lights up as you hover), type what you want, press Enter. Pin as many as you like.
    - **An area:** drag a box instead of clicking.
-   - **Several things in one note:** hold <kbd>Shift</kbd> while you click or drag; let go of it for the last one.
+   - **Several things in one note:** hold <kbd>Shift</kbd> while you click or drag them, then let go of it to write.
      They are numbered in the picture.
    - **Some text:** select it first, then press the pin. The note is about exactly those words.
 3. Back in Claude Code, write your next message as usual, say "fix these". You don't have to mention the notes or
