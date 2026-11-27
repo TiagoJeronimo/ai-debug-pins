@@ -1,6 +1,6 @@
 // Writing and reading .notes/notes.md. Shared by the Vite plugin (writes) and the Claude Code hook (reads).
 import { mkdir, writeFile, appendFile, readFile, rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { dirname, join, relative, isAbsolute } from 'node:path'
 
 const line = (s) => String(s ?? '').replace(/\s+/g, ' ').trim()
 
@@ -12,6 +12,9 @@ export async function saveNote(dir, note, png) {
   if (png) await writeFile(join(dir, id + '.png'), png)
   const quote = String(note.note ?? '').trim().split('\n').map((l) => '> ' + l).join('\n')
   const c = note.component
+  // A server component's file comes as a path on disk: shown from the project's root, like the others.
+  const root = dirname(dir)
+  if (c?.file && isAbsolute(c.file) && c.file.startsWith(root)) c.file = relative(root, c.file)
   const fields = [
     png
       ? `![picture](${id}.png)\n_The picture is redrawn by the page from its DOM: small differences from the screen are not bugs._`

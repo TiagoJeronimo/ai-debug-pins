@@ -90,7 +90,17 @@ import debugPins from 'ai-debug-pins'
 export default { plugins: [debugPins()] }
 ```
 
-Only on `vite serve`: nothing reaches a build.
+Frameworks with a config of their own take it under `vite`:
+
+```js
+// astro.config.mjs
+export default defineConfig({ vite: { plugins: [debugPins()] } })
+
+// nuxt.config.ts
+export default defineNuxtConfig({ vite: { plugins: [debugPins()] } })
+```
+
+SvelteKit and React Router use `vite.config` as above. Only on `vite serve`: nothing reaches a build.
 
 **2b. Anything else** (Next.js, Angular, webpack, Rails, Django, plain HTML...): run the notes server in your project
 folder, beside your dev server,

@@ -195,6 +195,9 @@ card.onsubmit = async (e) => {
 // when a WebGL canvas still holds its picture (no preserveDrawingBuffer needed). The note's UI is left out.
 async function picture() {
   const { domToCanvas } = await import('./modern-screenshot.js')
+  // The drawing waits for every image on the page, and an image left to load lazily further down never starts: it
+  // would wait half a minute. Asked to load now, they come in a moment from the dev server.
+  for (const img of document.images) if (!img.complete && img.loading === 'lazy') img.loading = 'eager'
   // A tab in the background gets no frames: after a moment it is drawn anyway (a WebGL canvas may come out blank).
   const page = await new Promise((ok, no) => {
     let done = false
@@ -207,6 +210,8 @@ async function picture() {
         width: Math.max(document.documentElement.scrollWidth, innerWidth),
         height: Math.max(document.documentElement.scrollHeight, innerHeight),
         filter: (n) => n !== host,
+        // Anything still not loaded after this is drawn without, rather than holding the note up.
+        timeout: 3000,
       }).then(ok, no)
     }
     requestAnimationFrame(draw)
@@ -274,7 +279,8 @@ function react(el) {
     let file = null
     for (let f = n[key]; f && names.length < 3; f = f.return) {
       const at = source(f)
-      file ??= at
+      // A bundler's chunk (Next.js serves client code from /_next/) is no file anyone can open: names only.
+      if (!file && at && !at.startsWith('_next/')) file = at
       // Only components used in the project's own code: a library's insides (CanvasImpl, minified names) say nothing.
       if (!at) continue
       if (typeof f.type === 'function') names.push(f.type.displayName || f.type.name || 'Anonymous')
@@ -287,9 +293,20 @@ function react(el) {
 
 function source(f) {
   if (f._debugSource) return `${f._debugSource.fileName}:${f._debugSource.lineNumber}`
-  for (const m of String(f._debugStack?.stack ?? '').matchAll(/(https?:\/\/[^\s()]+?):\d+:\d+/g)) {
-    const path = new URL(m[1]).pathname
-    if (!path.includes('/node_modules/') && !path.startsWith('/@')) return path.slice(1)
-  }
-  return null
+  // React 19 keeps the stack of where the element was made: the first frame is React's own jsx(), the second the
+  // component that made it. Its address is the dev server's (Vite: /src/App.tsx), or for a server component a file
+  // on disk (Next.js: about://React/Prerender/file:///.../app/page.tsx).
+  const frame = String(f._debugStack?.stack ?? '').split('\n').filter((l) => l.trim().startsWith('at '))[1]
+  // "at Name (address:line:col)" or "at address:line:col"; the address itself may hold brackets (Turbopack's do).
+  const url = frame?.match(/\((.*):\d+:\d+\)\s*$/)?.[1] ?? frame?.match(/at (\S+):\d+:\d+\s*$/)?.[1]
+  // Only real addresses: "<anonymous>" and the like belong to no file.
+  if (!/^(https?|file|about):\/\//.test(url ?? '')) return null
+  // Turbopack names the source inside the address of its chunk, encoded twice: ...?id=%255Bproject%255D/app/page.tsx+...
+  const turbo = decodeURIComponent(decodeURIComponent(url)).match(/\[project\]\/([^\s+?]+)/)?.[1]
+  if (turbo) return /node_modules/.test(turbo) ? null : turbo
+  const path = decodeURI(url.split('?')[0].replace(/^about:\/\/React\/[^/]+\//, ''))
+    .replace(/^https?:\/\/[^/]+\//, '')
+    .replace(/^file:\/\//, '')
+  // Libraries, also inside a bundler's chunk names (Turbopack's node_modules_next_dist_...), and Vite's own.
+  return /node_modules|next_dist|react-dom|^@|\/\.next\//.test(path) ? null : path
 }
