@@ -29,7 +29,7 @@ Then restart the dev server and Claude Code.
 1. Restart the dev server and Claude Code (the plugin starts with a new session).
 2. On any page in development, click the pin at the bottom right, click the thing you mean, type what you want,
    press Enter. Pin as many as you like.
-3. Then just write your next message as usual: the notes go with it by themselves, no need to mention them.
+3. Then just write your next message as usual: the notes go with it by themselves. No need to mention them, but you can.
 4. "Read my notes" picks up any note not yet done; "clear my notes" deletes the done ones.
 
 ## Use
