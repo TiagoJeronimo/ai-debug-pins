@@ -6,7 +6,11 @@ import { takeNew } from '../notes.js'
 if (process.env.AI_DEBUG_PINS_HOOK !== '0') {
   let raw = ''
   for await (const chunk of process.stdin) raw += chunk
-  const dir = join(JSON.parse(raw).cwd ?? process.cwd(), '.notes')
+  let cwd = process.cwd()
+  try {
+    cwd = JSON.parse(raw).cwd ?? cwd
+  } catch {}
+  const dir = join(cwd, '.notes')
   const fresh = await takeNew(dir)
   if (fresh.length) {
     const quotes = fresh.map((n) => (n.match(/^> (.*)$/m)?.[1] ?? '').slice(0, 60)).filter(Boolean)

@@ -9,6 +9,12 @@ Made for [Claude Code](https://claude.com/claude-code): new notes go along with 
 with any framework (React, Vue, Svelte, Next.js, plain HTML), on WebGL games as well as plain pages. The notes are plain
 files, so other AI tools can read them too (see the end).
 
+- No browser extension, no screen-recording permission: the page draws its own picture.
+- Development only: nothing reaches a production build.
+- Notes stay in your project, in `.notes/`, which git ignores. Nothing is sent anywhere else.
+
+Needs Node 20.6 or newer.
+
 ## Set it up with Claude
 
 Paste this into Claude Code, in your project:
@@ -99,6 +105,15 @@ too. Being redrawn, not a screenshot, it can differ in small ways (a stray chara
 lighter shadow). Each note says so, and Claude is told to act on your words and the element they point at, never on how
 the picture looks.
 
+## Safety
+
+A note goes to an AI agent that is told to act on it, so the server takes notes only from your own machine: the
+request has to come from this computer (not the network, even if your dev server listens there) and from a page on
+`localhost`, `127.0.0.1`, `[::1]` or `*.localhost`. Any other site open in your browser, including one that points its
+DNS at your machine, is turned away. Notes are capped in size and pictures must be PNGs.
+
+Pinning from your phone over the network is therefore not possible. That is on purpose.
+
 ## Other AI tools
 
 The notes are Markdown and PNGs, so any agent that reads files and images can use them (Codex, Cursor, Copilot,
@@ -115,6 +130,18 @@ note is handled, change its heading to `· done`.
 ```
 
 What only Claude Code gets: notes going along with your messages by themselves, and the "📍 note sent" line.
+
+## Remove it
+
+Take `debugPins()` out of your Vite config (or the script tag out of your page), then:
+
+```bash
+npm rm ai-debug-pins
+```
+
+```bash
+claude plugin uninstall ai-debug-pins@ai-debug-pins
+```
 
 ## Working on it
 

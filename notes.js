@@ -8,7 +8,7 @@ const line = (s) => String(s ?? '').replace(/\s+/g, ' ').trim()
 export async function saveNote(dir, note, png) {
   await mkdir(dir, { recursive: true })
   await writeFile(join(dir, '.gitignore'), '*\n')
-  const id = (note.time ?? new Date()).toISOString().replace(/[:.]/g, '-')
+  const id = (note.time instanceof Date ? note.time : new Date()).toISOString().replace(/[:.]/g, '-')
   if (png) await writeFile(join(dir, id + '.png'), png)
   const quote = String(note.note ?? '').trim().split('\n').map((l) => '> ' + l).join('\n')
   const c = note.component

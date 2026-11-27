@@ -27,6 +27,9 @@ ui.innerHTML = `<style>
 <form class="box" hidden><input placeholder="Your note. Enter saves, Esc cancels" aria-label="Note"></form>
 <div class="toast" role="status" hidden></div>`
 document.documentElement.append(host)
+// Keys typed into the note stay in the note: a game listening on the window would otherwise move its camera on WASD.
+// Stopped on the host, which they pass on their way out of the shadow root, before any listener on the page sees them.
+for (const type of ['keydown', 'keyup', 'keypress']) host.addEventListener(type, (e) => e.stopPropagation())
 
 const $ = (s) => ui.querySelector(s)
 const fab = $('.fab'), layer = $('.layer'), dot = $('.dot'), box = $('.box'), input = $('input'), toast = $('.toast')
@@ -45,7 +48,11 @@ const say = (text) => {
   say.t = setTimeout(() => (toast.hidden = true), 6000)
 }
 
-fab.onclick = () => (layer.hidden ? ((layer.hidden = false), fab.setAttribute('aria-pressed', 'true')) : reset())
+const open = () => {
+  layer.hidden = false
+  fab.setAttribute('aria-pressed', 'true')
+}
+fab.onclick = () => (fab.getAttribute('aria-pressed') === 'true' ? reset() : open())
 addEventListener('keydown', (e) => e.key === 'Escape' && !layer.hidden && reset(), true)
 input.onkeydown = (e) => {
   if (e.key === 'Escape') reset()
@@ -65,12 +72,14 @@ layer.onclick = (e) => {
     top: Math.min(e.clientY + 14, innerHeight - 60) + 'px',
   })
   dot.hidden = box.hidden = false
+  fab.setAttribute('aria-pressed', 'true')
   input.focus()
 }
 
 box.onsubmit = async (e) => {
   e.preventDefault()
   const p = pick
+  if (!p || !input.value.trim()) return
   const note = {
     note: input.value,
     url: location.href,
@@ -82,6 +91,7 @@ box.onsubmit = async (e) => {
     component: react(p.el),
   }
   reset()
+  say('Saving…')
   try {
     note.png = await withDot(await picture(), p.x, p.y)
   } catch (err) {
@@ -140,7 +150,8 @@ async function copy(note) {
     .filter(([, v]) => v)
     .map(([k, v]) => `${k}: ${v}`)
     .join('\n')
-  await navigator.clipboard.writeText(text)
+  // The clipboard can refuse (the page lost focus while the picture was drawn): the picture is still downloaded.
+  if (!(await navigator.clipboard.writeText(text).then(() => true, () => false))) return say('Nowhere to save the note, and the clipboard refused it.')
   say('No ai-debug-pins plugin on this server: the note is on the clipboard' + (png ? ', the picture in your downloads.' : '.'))
 }
 
