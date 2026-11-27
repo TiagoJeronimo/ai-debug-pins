@@ -4,11 +4,12 @@
 // <script type="module" src="http://localhost:7777/client.js"></script>
 import { createServer } from 'node:http'
 import { resolve } from 'node:path'
-import { handler } from './server.js'
+import { handler, claudePlugin, HINT } from './server.js'
 
 const port = Number(process.argv[2] || process.env.PORT || 7777)
 createServer(handler()).listen(port, '127.0.0.1', () => {
   console.log(`ai-debug-pins: notes go to ${resolve('.notes')}`)
   console.log(`Add to your page, in development only:`)
   console.log(`  <script type="module" src="http://localhost:${port}/client.js"></script>`)
+  claudePlugin().then((ok) => ok || console.log(HINT))
 })

@@ -186,7 +186,9 @@ card.onsubmit = async (e) => {
   const saved = await POST('note', note).catch(() => null)
   if (!saved || saved.status === 404) return copy(note)
   if (!saved.ok) return say('Not pinned: ' + (await saved.json().catch(() => ({}))).error, true)
-  say(note.png ? '📍 Pinned. It goes with your next message to Claude.' : 'Pinned, without a picture: ' + note.noPicture, !note.png)
+  const { claude } = await saved.json().catch(() => ({}))
+  if (!note.png) return say('Pinned, without a picture: ' + note.noPicture, true)
+  say(claude ? '📍 Pinned. It goes with your next message to Claude.' : '📍 Pinned in .notes/notes.md.')
 }
 
 // The page draws its own picture: no permission, no extension. Taken inside a frame, right after the page has drawn,

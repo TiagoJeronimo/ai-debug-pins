@@ -18,6 +18,7 @@ test('the standalone server takes notes from local pages only', async (t) => {
   const ok = await post('http://localhost:3000')
   assert.equal(ok.status, 200)
   assert.equal(ok.headers.get('access-control-allow-origin'), 'http://localhost:3000')
+  assert.equal(typeof (await ok.json()).claude, 'boolean')
   assert.match(await readFile(join(dir, 'notes.md'), 'utf8'), /> hi/)
   assert.equal((await post('https://evil.example')).status, 403)
   // A site that rebinds its DNS to 127.0.0.1 still sends its own name as the origin.

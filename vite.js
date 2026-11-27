@@ -1,6 +1,6 @@
 // The Vite plugin: puts the note button on every page of the dev server and saves what it sends.
 // apply: 'serve', so nothing of it reaches a production build.
-import { handler } from './server.js'
+import { handler, claudePlugin, HINT } from './server.js'
 
 export default function debugPins({ dir = '.notes' } = {}) {
   return {
@@ -11,6 +11,7 @@ export default function debugPins({ dir = '.notes' } = {}) {
     ],
     configureServer(server) {
       server.middlewares.use(handler({ dir, prefix: '/@ai-debug-pins/', log: (m) => server.config.logger.info(m) }))
+      claudePlugin().then((ok) => ok || server.config.logger.info(HINT))
     },
   }
 }
