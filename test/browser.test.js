@@ -21,7 +21,18 @@ const PAGE = `<!doctype html><meta charset="utf-8"><style>body { margin: 0; font
 <h1 style="margin: 40px">A heading</h1>
 <p id="para" style="margin: 40px">Some words to select</p>
 <button id="go" style="position: absolute; left: 600px; top: 300px; width: 120px; height: 40px">Go</button>
-<script>addEventListener('keydown', (e) => (window.keys = (window.keys ?? '') + e.key))</script>
+<canvas id="gl" width="100" height="100" style="position: absolute; left: 800px; top: 500px; width: 100px; height: 100px"></canvas>
+<script>addEventListener('keydown', (e) => (window.keys = (window.keys ?? '') + e.key))
+// WebGL drawn every other frame only, as a page might on a 120 Hz screen: between two, the canvas is empty.
+const gl = document.getElementById('gl').getContext('webgl')
+let odd = false
+const frame = () => {
+  requestAnimationFrame(frame)
+  if ((odd = !odd)) return
+  gl.clearColor(1, 0, 0, 1)
+  gl.clear(gl.COLOR_BUFFER_BIT)
+}
+requestAnimationFrame(frame)</script>
 <script type="module" src="/@ai-debug-pins/client.js"></script>`
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -149,6 +160,13 @@ test('pinning in a real browser: a click, an area, several with Shift, selected 
   assert.ok(!(await ui('.card')), 'a click beside an empty note closes it')
 
   const files = await readdir(dir)
-  assert.equal(files.filter((f) => f.endsWith('.png')).length, 4, 'every note has its picture')
+  const pngs = files.filter((f) => f.endsWith('.png')).sort()
+  assert.equal(pngs.length, 4, 'every note has its picture')
+  // The WebGL canvas, drawn only every other frame, is in every picture.
+  for (const png of pngs) {
+    const data = (await readFile(join(dir, png))).toString('base64')
+    const red = await js(`new Promise((resolve) => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const x = c.getContext('2d'); x.drawImage(img, 0, 0); resolve([...x.getImageData(850 * devicePixelRatio, 550 * devicePixelRatio, 1, 1).data]) }; img.src = 'data:image/png;base64,${data}' })`)
+    assert.deepEqual(red, [255, 0, 0, 255], 'the WebGL canvas in ' + png)
+  }
   assert.deepEqual(errors, [])
 })

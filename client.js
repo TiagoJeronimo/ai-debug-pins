@@ -347,8 +347,43 @@ card.onsubmit = async (e) => {
 
 const visibleText = (el) => (el?.innerText || el?.getAttribute?.('aria-label') || el?.alt || '').trim().slice(0, 200)
 
-// The page draws its own picture: no permission, no extension. Taken inside a frame, right after the page has drawn,
-// when a WebGL canvas still holds its picture (no preserveDrawingBuffer needed). The note's UI is left out.
+// A WebGL canvas holds its picture only until the frame it was drawn in reaches the screen (unless the page asked for
+// preserveDrawingBuffer). A page need not draw every frame (one that draws every other frame on a 120 Hz screen), so
+// waiting for a frame is not enough: this waits for the page to draw, and copies every canvas straight after, before
+// the frame ends. A page that draws nothing (no WebGL, a tab in the background) is copied after a few frames, or half
+// a second.
+function drawnCanvases() {
+  return new Promise((resolve) => {
+    const kinds = [globalThis.WebGLRenderingContext, globalThis.WebGL2RenderingContext].filter(Boolean)
+    const names = ['clear', 'drawArrays', 'drawElements']
+    const own = kinds.flatMap((kind) => names.map((name) => [kind.prototype, name, kind.prototype[name]]))
+    let done = false
+    let frames = 0
+    const copy = () => {
+      if (done) return
+      done = true
+      for (const [proto, name, fn] of own) proto[name] = fn
+      resolve([...document.querySelectorAll('canvas')].flatMap((canvas) => {
+        try {
+          return [[canvas, canvas.toDataURL()]]
+        } catch {
+          return [] // a canvas with pictures from another site cannot be read
+        }
+      }))
+    }
+    // After the first draw call, the rest of the frame is drawn in the same go: the copy waits for that go to end.
+    for (const [proto, name, fn] of own)
+      proto[name] = function (...args) {
+        if (!done) queueMicrotask(copy)
+        return fn.apply(this, args)
+      }
+    const frame = () => (++frames > 3 ? copy() : requestAnimationFrame(frame))
+    requestAnimationFrame(frame)
+    setTimeout(copy, 500)
+  })
+}
+
+// The page draws its own picture: no permission, no extension. The note's UI is left out.
 async function picture() {
   const { createContext, domToCanvas } = await import('./modern-screenshot.js')
   const context = await createContext(document.documentElement, {
@@ -367,17 +402,10 @@ async function picture() {
   })
   // Fetching what the picture needs (fonts, images) may take longer.
   context.timeout = 3000
-  // A tab in the background gets no frames: after a moment it is drawn anyway (a WebGL canvas may come out blank).
-  const page = await new Promise((resolve, reject) => {
-    let started = false
-    const draw = () => {
-      if (started) return
-      started = true
-      domToCanvas(context).then(resolve, reject)
-    }
-    requestAnimationFrame(draw)
-    setTimeout(draw, 500)
-  })
+  // The canvases are copied the moment they are drawn, and the picture is made of those copies.
+  const copies = await drawnCanvases()
+  for (const [canvas, url] of copies) canvas.toDataURL = () => url
+  const page = await domToCanvas(context).finally(() => copies.forEach(([canvas]) => delete canvas.toDataURL))
   // The whole page is drawn; keep the part that was on screen.
   const scale = devicePixelRatio
   const canvas = document.createElement('canvas')
