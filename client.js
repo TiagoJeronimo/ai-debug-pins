@@ -4,79 +4,149 @@
 const POST = (path, body) =>
   fetch(new URL(path, import.meta.url), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
 
+const RED = '#e5484d'
+const PIN = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.8-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 15.2 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>`
+
 const host = document.createElement('ai-debug-pins-ui')
 const ui = host.attachShadow({ mode: 'open' })
+// Dark and small, so it reads on any page and is not mistaken for part of it.
 ui.innerHTML = `<style>
-  :host { all: initial; font: 14px/1.4 system-ui, sans-serif; }
+  :host { all: initial; font: 13px/1.45 ui-sans-serif, system-ui, -apple-system, sans-serif; color: #fafafa;
+    --bg: #18181b; --line: #3f3f46; --dim: #a1a1aa; }
   * { box-sizing: border-box; }
-  .fab { position: fixed; right: 16px; bottom: 16px; z-index: 2147483647; width: 40px; height: 40px; border-radius: 50%;
-    border: 0; background: #e5484d; color: #fff; font-size: 18px; cursor: pointer; box-shadow: 0 2px 8px #0004; }
-  .fab[aria-pressed='true'] { background: #222; }
+  [hidden] { display: none !important; }
+  .top { z-index: 2147483647; position: fixed; }
+  .fab { right: 16px; bottom: 16px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--bg); color: #fafafa; cursor: pointer;
+    box-shadow: 0 4px 14px #0005; transition: transform .12s, background .12s; }
+  .fab:hover { transform: scale(1.06); }
+  .fab:focus-visible, button:focus-visible, textarea:focus-visible { outline: 2px solid ${RED}; outline-offset: 2px; }
+  .fab[aria-pressed='true'] { background: ${RED}; border-color: ${RED}; }
   .layer { position: fixed; inset: 0; z-index: 2147483646; cursor: crosshair; }
-  .dot { position: fixed; width: 28px; height: 28px; margin: -14px; border-radius: 50%; border: 4px solid #e5484d;
-    box-shadow: 0 0 0 2px #fff, 0 0 0 3px #0006; z-index: 2147483647; pointer-events: none; }
-  .box { position: fixed; z-index: 2147483647; width: 300px; padding: 6px; background: #fff; border-radius: 8px;
-    box-shadow: 0 4px 16px #0005; }
-  input { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 6px; font: inherit; color: #111; }
-  .toast { position: fixed; right: 64px; bottom: 22px; z-index: 2147483647; max-width: 420px; padding: 6px 10px;
-    border-radius: 6px; background: #222; color: #fff; }
-  [hidden] { display: none; }
+  .hint { top: 14px; left: 50%; transform: translateX(-50%); padding: 7px 14px; border-radius: 999px;
+    background: var(--bg); border: 1px solid var(--line); box-shadow: 0 4px 14px #0005; pointer-events: none;
+    white-space: nowrap; }
+  kbd { font: inherit; font-size: 11px; padding: 1px 5px; border: 1px solid var(--line); border-radius: 4px; color: var(--dim); }
+  .hl { border: 2px solid ${RED}; background: #e5484d1a; border-radius: 3px; pointer-events: none; z-index: 2147483646; }
+  .tag { position: absolute; left: -2px; bottom: 100%; margin-bottom: 4px; padding: 1px 6px; border-radius: 4px;
+    background: ${RED}; color: #fff; font-size: 11px; white-space: nowrap; }
+  .hl.low .tag { bottom: auto; top: 100%; margin: 4px 0 0; }
+  .dot { width: 28px; height: 28px; margin: -14px; border-radius: 50%; border: 3.5px solid ${RED};
+    box-shadow: 0 0 0 2px #fff, 0 0 0 3px #0006; pointer-events: none; }
+  .card { width: 320px; padding: 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line);
+    box-shadow: 0 10px 30px #0006; animation: in .12s ease-out; }
+  @keyframes in { from { opacity: 0; transform: translateY(4px); } }
+  .about { display: flex; gap: 6px; align-items: center; color: var(--dim); font-size: 12px; margin: 0 2px 8px;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .about b { color: #fafafa; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+  textarea { display: block; width: 100%; min-height: 64px; max-height: 200px; resize: vertical; padding: 8px 10px;
+    border-radius: 8px; border: 1px solid var(--line); background: #09090b; color: #fafafa; font: inherit; }
+  textarea::placeholder { color: #71717a; }
+  .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; color: var(--dim);
+    font-size: 11px; }
+  .send { padding: 5px 12px; border-radius: 7px; border: 0; background: ${RED}; color: #fff; font: inherit;
+    font-weight: 600; cursor: pointer; }
+  .send:disabled { opacity: .4; cursor: default; }
+  .toast { right: 70px; bottom: 22px; max-width: 420px; padding: 7px 12px; border-radius: 8px; background: var(--bg);
+    border: 1px solid var(--line); box-shadow: 0 4px 14px #0005; animation: in .12s ease-out; }
+  .toast.bad { border-color: ${RED}; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
-<button class="fab" title="Pin a note (click, then click a spot)" aria-pressed="false">✎</button>
-<div class="layer" hidden></div><div class="dot" hidden></div>
-<form class="box" hidden><input placeholder="Your note. Enter saves, Esc cancels" aria-label="Note"></form>
-<div class="toast" role="status" hidden></div>`
+<button class="fab top" title="Pin a note" aria-label="Pin a note" aria-pressed="false">${PIN}</button>
+<div class="layer" hidden></div>
+<div class="hint top" hidden>Click what your note is about <kbd>Esc</kbd></div>
+<div class="hl top" hidden><span class="tag"></span></div>
+<div class="dot top" hidden></div>
+<form class="card top" hidden>
+  <div class="about">On <b></b></div>
+  <textarea placeholder="What should change?" aria-label="Note" rows="3"></textarea>
+  <div class="foot"><span><kbd>Enter</kbd> pin · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Esc</kbd></span>
+    <button class="send" type="submit" disabled>Pin</button></div>
+</form>
+<div class="toast top" role="status" hidden></div>`
 document.documentElement.append(host)
 // Keys typed into the note stay in the note: a game listening on the window would otherwise move its camera on WASD.
 // Stopped on the host, which they pass on their way out of the shadow root, before any listener on the page sees them.
 for (const type of ['keydown', 'keyup', 'keypress']) host.addEventListener(type, (e) => e.stopPropagation())
 
 const $ = (s) => ui.querySelector(s)
-const fab = $('.fab'), layer = $('.layer'), dot = $('.dot'), box = $('.box'), input = $('input'), toast = $('.toast')
+const [fab, layer, hint, hl, dot, card, input, toast] =
+  ['.fab', '.layer', '.hint', '.hl', '.dot', '.card', 'textarea', '.toast'].map($)
+const send = $('.send')
 let pick = null // the click: the point and the element under it
 
 const reset = () => {
   pick = null
-  for (const el of [layer, dot, box]) el.hidden = true
+  for (const el of [layer, hint, hl, dot, card]) el.hidden = true
   input.value = ''
+  send.disabled = true
   fab.setAttribute('aria-pressed', 'false')
 }
-const say = (text) => {
+// Shown for a few seconds; ms 0 keeps it up until the next message replaces it.
+const say = (text, bad = false, ms = bad ? 9000 : 5000) => {
   toast.textContent = text
+  toast.classList.toggle('bad', bad)
   toast.hidden = false
   clearTimeout(say.t)
-  say.t = setTimeout(() => (toast.hidden = true), 6000)
+  if (ms) say.t = setTimeout(() => (toast.hidden = true), ms)
 }
 
-const open = () => {
-  layer.hidden = false
+fab.onclick = () => {
+  if (fab.getAttribute('aria-pressed') === 'true') return reset()
+  layer.hidden = hint.hidden = false
   fab.setAttribute('aria-pressed', 'true')
 }
-fab.onclick = () => (fab.getAttribute('aria-pressed') === 'true' ? reset() : open())
 addEventListener('keydown', (e) => e.key === 'Escape' && !layer.hidden && reset(), true)
+input.oninput = () => (send.disabled = !input.value.trim())
 input.onkeydown = (e) => {
   if (e.key === 'Escape') reset()
-  // Not left to the form's own Enter, which some input methods and automation skip; not while composing a character.
-  if (e.key === 'Enter' && !e.isComposing) e.preventDefault(), box.requestSubmit()
+  // Enter pins, Shift+Enter is a new line; not while composing a character with an input method.
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) e.preventDefault(), card.requestSubmit()
 }
 
-layer.onclick = (e) => {
-  host.style.display = 'none'
-  const el = document.elementFromPoint(e.clientX, e.clientY)
-  host.style.display = ''
-  pick = { x: e.clientX, y: e.clientY, el }
-  layer.hidden = true
-  Object.assign(dot.style, { left: e.clientX + 'px', top: e.clientY + 'px' })
-  Object.assign(box.style, {
-    left: Math.min(e.clientX + 14, innerWidth - 310) + 'px',
-    top: Math.min(e.clientY + 14, innerHeight - 60) + 'px',
+// The page's element under a point, looking through the note's own UI.
+const under = (x, y) => document.elementsFromPoint(x, y).find((el) => el !== host) ?? null
+const name = (el) => {
+  const c = react(el)
+  const tag = el.localName + (el.id ? '#' + el.id : el.classList[0] ? '.' + el.classList[0] : '')
+  return c ? `${c.names[0]} · ${tag}` : tag
+}
+
+// While picking, the element under the pointer lights up with its name, so it is clear what the note will be about.
+let frame = 0
+layer.onpointermove = (e) => {
+  cancelAnimationFrame(frame)
+  frame = requestAnimationFrame(() => {
+    const el = under(e.clientX, e.clientY)
+    if (!el || el === document.documentElement || el === document.body) return (hl.hidden = true)
+    const r = el.getBoundingClientRect()
+    Object.assign(hl.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' })
+    hl.classList.toggle('low', r.top < 24)
+    hl.firstChild.textContent = name(el)
+    hl.hidden = false
   })
-  dot.hidden = box.hidden = false
-  fab.setAttribute('aria-pressed', 'true')
+}
+layer.onpointerleave = () => (hl.hidden = true)
+
+layer.onclick = (e) => {
+  cancelAnimationFrame(frame)
+  const el = under(e.clientX, e.clientY)
+  pick = { x: e.clientX, y: e.clientY, el }
+  layer.hidden = hint.hidden = hl.hidden = true
+  $('.about b').textContent = el ? name(el) : 'the page'
+  Object.assign(dot.style, { left: e.clientX + 'px', top: e.clientY + 'px' })
+  // Beside the ring, on whichever side has room.
+  const w = 320, h = 150
+  Object.assign(card.style, {
+    left: Math.max(8, e.clientX + 20 + w < innerWidth ? e.clientX + 20 : e.clientX - 20 - w) + 'px',
+    top: Math.max(8, e.clientY + 20 + h < innerHeight ? e.clientY + 20 : e.clientY - 20 - h) + 'px',
+  })
+  dot.hidden = card.hidden = false
   input.focus()
 }
 
-box.onsubmit = async (e) => {
+card.onsubmit = async (e) => {
   e.preventDefault()
   const p = pick
   if (!p || !input.value.trim()) return
@@ -91,7 +161,7 @@ box.onsubmit = async (e) => {
     component: react(p.el),
   }
   reset()
-  say('Saving…')
+  say('Pinning…', false, 0)
   try {
     note.png = await withDot(await picture(), p.x, p.y)
   } catch (err) {
@@ -99,25 +169,31 @@ box.onsubmit = async (e) => {
   }
   const saved = await POST('note', note).catch(() => null)
   if (!saved || saved.status === 404) return copy(note)
-  if (!saved.ok) return say('Not saved: ' + (await saved.json().catch(() => ({}))).error)
-  say(note.png ? 'Saved in .notes/notes.md' : 'Saved without a picture: ' + note.noPicture)
+  if (!saved.ok) return say('Not pinned: ' + (await saved.json().catch(() => ({}))).error, true)
+  say(note.png ? '📍 Pinned. It goes with your next message to Claude.' : 'Pinned, without a picture: ' + note.noPicture, !note.png)
 }
 
 // The page draws its own picture: no permission, no extension. Taken inside a frame, right after the page has drawn,
 // when a WebGL canvas still holds its picture (no preserveDrawingBuffer needed). The note's UI is left out.
 async function picture() {
   const { domToCanvas } = await import('./modern-screenshot.js')
-  const page = await new Promise((ok, no) =>
-    requestAnimationFrame(() =>
+  // A tab in the background gets no frames: after a moment it is drawn anyway (a WebGL canvas may come out blank).
+  const page = await new Promise((ok, no) => {
+    let done = false
+    const draw = () => {
+      if (done) return
+      done = true
       domToCanvas(document.documentElement, {
         scale: devicePixelRatio,
         // At least the screen: a page whose content is all fixed (a game) measures zero high.
         width: Math.max(document.documentElement.scrollWidth, innerWidth),
         height: Math.max(document.documentElement.scrollHeight, innerHeight),
         filter: (n) => n !== host,
-      }).then(ok, no),
-    ),
-  )
+      }).then(ok, no)
+    }
+    requestAnimationFrame(draw)
+    setTimeout(draw, 500)
+  })
   // The whole page is drawn; keep the part that was on screen.
   const k = devicePixelRatio
   const c = document.createElement('canvas')
@@ -131,7 +207,7 @@ async function withDot(c, x, y) {
   const k = devicePixelRatio
   const g = c.getContext('2d')
   // A ring, not a filled dot, so what was clicked stays readable inside it.
-  for (const [width, colour] of [[8, '#0009'], [6, '#fff'], [3.5, '#e5484d']]) {
+  for (const [width, colour] of [[8, '#0009'], [6, '#fff'], [3.5, RED]]) {
     g.beginPath()
     g.arc(x * k, y * k, 14 * k, 0, Math.PI * 2)
     g.lineWidth = width * k

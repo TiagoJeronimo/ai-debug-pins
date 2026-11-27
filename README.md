@@ -26,9 +26,13 @@ Then restart the dev server and Claude Code.
 
 ## Use
 
-On any page in development: click ✎ at the bottom right, click a spot, type, Enter (Esc cancels). Back in Claude Code,
-send anything ("go"): the chat shows "📍 1 note sent with this message", and Claude says what it got, looks at the
-picture, finds the code and does what the note asks. Or say "read my notes" for every note not yet done.
+1. On any page in development, click the pin at the bottom right.
+2. Click the thing you mean (it lights up as you hover), type what you want, press Enter. Pin as many as you like.
+3. Back in Claude Code, write your next message as usual, say "fix these". The notes go with it: the chat shows
+   "📍 2 notes sent with this message", and Claude says what it got, opens each picture, finds the code and does what
+   each note asks.
+
+Or say "read my notes" at any time, for every note not yet done.
 
 Notes live in `.notes/notes.md`, pictures beside them; `.notes/` ignores itself in git. A note looks like this:
 
