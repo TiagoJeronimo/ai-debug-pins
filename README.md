@@ -24,15 +24,7 @@ Paste this into Claude Code, in your project:
 > Set up ai-debug-pins here (https://github.com/TiagoJeronimo/ai-debug-pins): install its Claude Code plugin, then
 > add it to my dev server as its README says, for development only. Then tell me how to use it.
 
-Then restart the dev server and Claude Code.
-
-**For Claude, once it is set up:** end by telling the user, in a few short lines:
-
-1. Restart the dev server and Claude Code (the plugin starts with a new session).
-2. On any page in development, click the pin at the bottom right, click the thing you mean, type what you want,
-   press Enter. Pin as many as you like.
-3. Then just write your next message as usual: the notes go with it by themselves. No need to mention them, but you can.
-4. "Read my notes" picks up any note not yet done; "clear my notes" deletes the done ones.
+When it is done, Claude tells you how to use it. Then restart the dev server and Claude Code.
 
 ## Use
 
@@ -140,10 +132,11 @@ To stop notes going along with your messages, set `AI_DEBUG_PINS_HOOK=0`; "read 
 ![On a WebGL game: the canvas comes out in the picture too](https://raw.githubusercontent.com/TiagoJeronimo/ai-debug-pins/main/docs/demo-webgl.gif)
 
 No permission and no extension: the page draws its own picture
-([modern-screenshot](https://github.com/qq15725/modern-screenshot)), right after it has drawn a frame, so WebGL comes out
-too. Being redrawn, not a screenshot, it can differ in small ways (a stray character from an unusual CSS `content`, a
-lighter shadow). Each note says so, and Claude is told to act on your words and the element they point at, never on how
-the picture looks.
+([modern-screenshot](https://github.com/qq15725/modern-screenshot)). The HTML and CSS are redrawn from the page itself, so
+they can differ from the screen in small ways (a stray character from an unusual CSS `content`, a lighter shadow). A
+canvas, WebGL included, is copied pixel for pixel: the picture is taken right after the page has drawn a frame, while
+the canvas still holds it. Each note says the picture is redrawn, and Claude is told to act on your words and the
+element they point at, never on how the picture looks.
 
 ## Safety
 
@@ -182,6 +175,18 @@ npm uninstall ai-debug-pins
 ```bash
 claude plugin uninstall ai-debug-pins@ai-debug-pins
 ```
+
+## For the AI setting this up
+
+This part is for Claude (or another assistant) doing the set-up for someone; people can skip it.
+
+When the set-up is done, end by telling the user, in a few short lines:
+
+1. Restart the dev server and Claude Code (the plugin starts with a new session).
+2. On any page in development, click the pin at the bottom right, click the thing you mean, type what you want,
+   press Enter. Pin as many as you like.
+3. Then just write your next message as usual: the notes go with it by themselves. No need to mention them, but you can.
+4. "Read my notes" picks up any note not yet done; "clear my notes" deletes the done ones.
 
 ## Working on it
 

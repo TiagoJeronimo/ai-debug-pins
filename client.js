@@ -350,25 +350,30 @@ const visibleText = (el) => (el?.innerText || el?.getAttribute?.('aria-label') |
 // The page draws its own picture: no permission, no extension. Taken inside a frame, right after the page has drawn,
 // when a WebGL canvas still holds its picture (no preserveDrawingBuffer needed). The note's UI is left out.
 async function picture() {
-  const { domToCanvas } = await import('./modern-screenshot.js')
-  // The drawing waits for every image on the page, and an image left to load lazily further down never starts: it
-  // would wait half a minute. Asked to load now, they come in a moment from the dev server.
-  for (const img of document.images) if (!img.complete && img.loading === 'lazy') img.loading = 'eager'
+  const { createContext, domToCanvas } = await import('./modern-screenshot.js')
+  const context = await createContext(document.documentElement, {
+    scale: devicePixelRatio,
+    // The window's width, not the page's: a page a little wider than the window (something poking out on the right)
+    // would otherwise be laid out again for a wider screen, with other margins and line breaks.
+    width: document.documentElement.clientWidth,
+    // All of it, to scroll to where the screen was. At least the screen: a page whose content is all fixed (a game)
+    // measures zero high.
+    height: Math.max(document.documentElement.scrollHeight, innerHeight),
+    filter: (node) => node !== host,
+    // Getting ready waits for every image on the page to load, and one left to load lazily further down never starts.
+    // Those on screen have loaded already; the rest are not in the picture anyway.
+    timeout: 300,
+    autoDestruct: true,
+  })
+  // Fetching what the picture needs (fonts, images) may take longer.
+  context.timeout = 3000
   // A tab in the background gets no frames: after a moment it is drawn anyway (a WebGL canvas may come out blank).
   const page = await new Promise((resolve, reject) => {
     let started = false
     const draw = () => {
       if (started) return
       started = true
-      domToCanvas(document.documentElement, {
-        scale: devicePixelRatio,
-        // At least the screen: a page whose content is all fixed (a game) measures zero high.
-        width: Math.max(document.documentElement.scrollWidth, innerWidth),
-        height: Math.max(document.documentElement.scrollHeight, innerHeight),
-        filter: (node) => node !== host,
-        // Anything still not loaded after this is drawn without, rather than holding the note up.
-        timeout: 3000,
-      }).then(resolve, reject)
+      domToCanvas(context).then(resolve, reject)
     }
     requestAnimationFrame(draw)
     setTimeout(draw, 500)

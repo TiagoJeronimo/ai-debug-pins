@@ -1,6 +1,6 @@
 {
   "name": "ai-debug-pins",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Click a spot on your dev page and type a note: Claude Code gets a picture with a ring where you clicked, your words and the code they point at.",
   "type": "module",
   "license": "MIT",
