@@ -187,7 +187,7 @@ claude plugin uninstall ai-debug-pins@ai-debug-pins
 
 ```bash
 npm run demo   # a page with a WebGL canvas
-npm test
+npm test       # the browser test drives a headless Chrome, and is skipped without one
 ```
 
 MIT licence.
