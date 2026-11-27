@@ -20,9 +20,17 @@ Needs Node 20.6 or newer.
 Paste this into Claude Code, in your project:
 
 > Set up ai-debug-pins here (https://github.com/TiagoJeronimo/ai-debug-pins): install its Claude Code plugin, then
-> add it to my dev server as its README says, for development only.
+> add it to my dev server as its README says, for development only. Then tell me how to use it.
 
 Then restart the dev server and Claude Code.
+
+**For Claude, once it is set up:** end by telling the user, in a few short lines:
+
+1. Restart the dev server and Claude Code (the plugin starts with a new session).
+2. On any page in development, click the pin at the bottom right, click the thing you mean, type what you want,
+   press Enter. Pin as many as you like.
+3. Then just write your next message as usual: the notes go with it by themselves, no need to mention them.
+4. "Read my notes" picks up any note not yet done; "clear my notes" deletes the done ones.
 
 ## Use
 
