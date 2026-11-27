@@ -40,6 +40,9 @@ When it is done, Claude tells you how to use it. Then restart the dev server and
    "📍 2 notes sent with this message", and Claude says what it got, opens each picture, finds the code and does what
    each note asks.
 
+Notes pinned while Claude is busy wait for your next message; at the end of each turn the chat shows
+"📍 2 notes waiting", so they are not forgotten.
+
 Or say "read my notes" at any time, for every note not yet done.
 
 A handled note stays in the file, marked done, with its picture beside it: a record of what you asked for. Say

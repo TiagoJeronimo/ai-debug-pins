@@ -1,7 +1,7 @@
 {
   "name": "ai-debug-pins",
   "description": "Read the notes you pinned on your dev pages (.notes/notes.md, with pictures) and act on them.",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "author": { "name": "Tiago Jerónimo Silva" },
   "homepage": "https://github.com/TiagoJeronimo/ai-debug-pins",
   "license": "MIT"

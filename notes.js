@@ -43,14 +43,16 @@ export async function saveNote(dir, note, png) {
   return id
 }
 
-/** Returns the notes still marked new and marks them read. */
-export async function takeNew(dir) {
+/** Returns the notes still marked new; `take` marks them read. */
+export async function newNotes(dir, take = false) {
   const file = join(dir, 'notes.md')
   const md = await readFile(file, 'utf8').catch(() => '')
   const fresh = md.split(/(?=^## )/m).filter((s) => /^## .* · new$/m.test(s.split('\n')[0]))
-  if (fresh.length) await writeFile(file, md.replace(/^(## .*) · new$/gm, '$1 · read'))
+  if (take && fresh.length) await writeFile(file, md.replace(/^(## .*) · new$/gm, '$1 · read'))
   return fresh.map((s) => s.trim())
 }
+
+export const takeNew = (dir) => newNotes(dir, true)
 
 /** Deletes the notes marked done, and their pictures. Returns how many went. */
 export async function clearDone(dir) {
